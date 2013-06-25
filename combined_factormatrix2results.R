@@ -1,16 +1,16 @@
 library('gplots')
 library('plyr')
-resultsbin = "../../Analysis/Results/RUV2_NSAveraged_Results/"
-outbin = "../Results/"
-outplots = "2factorresultsplots_RUV2_NSAveraged_10kb.pdf"
-outtables = "2RUV2_NSAveraged_FACTOR_10kbBindingWindow_"
-olapplots = "2overlapplots_RUV2_NSAveraged_10kb.pdf"
+resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_Results/"
+outbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/"
+outplots = "3factorresultsplots_RUV2_NSAveraged_10kb.pdf"
+outtables = "3RUV2_NSAveraged_FACTOR_10kbBindingWindow_"
+olapplots = "3overlapplots_RUV2_NSAveraged_10kb.pdf"
 de_threshold = 0.05
 relaxed_threshold = 0.2
-resultsmatrix = as.matrix(read.table("../allbindingresults10kb.txt",sep="\t"))
+resultsmatrix = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/allbindingresults10kb.txt",sep="\t"))
 resultsbinary = resultsmatrix
-binary.phi = as.matrix(read.table("../PhiTables/AllFactorBinding10kbPhis.txt"))
-factors = read.table("../Annotations/allbinding_list.txt")
+binary.phi = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/PhiTables/AllFactorBinding10kbPhis.txt"))
+factors = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt")
 
 #Create a list of all knockdown experiments from teh resultsbin
 all.pvals <- list.files(path = resultsbin,pattern="Pvalues.txt")
@@ -165,12 +165,20 @@ percs = cbind(as.numeric(bindingmatrix[,4])/as.numeric(bindingmatrix[,3]),
 colnames(percs) = c("Bound/Total","DE/Bound","RelaxedDE/Bound","BoundPlus/Total",
                     "DEPlus/Bound","RelaxedDEPlus/Bound")
 par(mfrow=c(2,1))
-boxplot(percs,ylim=c(0,1),notch=T,col=c("tomato","dodgerblue2","mediumseagreen"),
-        outpch=20,outcol=c("tomato","dodgerblue2","mediumseagreen"),ylab="Percent",
-        names=c("Genes\nBound","Bound Genes DE\n(FDR 0.05)",
-                "Bound Genes DE\n(FDR 0.20)","Genes\nBound",
-                "Bound Genes DE\n(FDR 0.05)","Bound Genes DE\n(FDR 0.20)"),las=2)
-abline(v=3.5,lty="dashed")
+# boxplot(percs,ylim=c(0,1),notch=T,col=c("tomato","dodgerblue2","mediumseagreen"),
+#         outpch=20,outcol=c("tomato","dodgerblue2","mediumseagreen"),ylab="Percent",
+#         names=c("Genes\nBound","Bound Genes DE\n(FDR 0.05)",
+#                 "Bound Genes DE\n(FDR 0.20)","Genes\nBound",
+#                 "Bound Genes DE\n(FDR 0.05)","Bound Genes DE\n(FDR 0.20)"),las=2)
+# abline(v=3.5,lty="dashed")
+
+par(mar=c(8, 8, 2, 4) + 0.1)
+par(mgp=c(3,1.5,0))
+boxplot(percs[,4:6],ylim=c(0,1),notch=T,col=c("tomato","dodgerblue2","mediumseagreen"),
+        outpch=20,outcol=c("tomato","dodgerblue2","mediumseagreen"),ylab="Fraction",
+        cex.lab=2,las=1,names=c("Bound Genes\nAll Genes","DE Genes (FDR 0.05)\nBound Genes","DE Genes (FDR 0.20)\nBound Genes"))
+abline(v=1.5,lty="dashed")
+#mtext(adj=0.5,side=1,text=c("Bound Genes\nAll Genes","DE Genes (FDR 0.05)\nBound Genes","DE Genes (FDR 0.20)\nBound Genes"),at=1:3)
 
 write.table(bindingmatrix,paste0(outtables,"overlaptable.txt"),row.names=F,quote=F,sep="\t")
 
@@ -313,15 +321,16 @@ for(i in 1:10){
 ys = c(ys,yi[10:1])
 weirdspots = which(tfperccomm>0.2 & deperccomm<0.15)
 
-pdf(paste0(outbin,olapplots),width=9,height=6)
-plot(dtfs[,2],dtfs[,1],las=1,xlab="Differentially Expressed Transcription Factors",ylab="Differentially Expressed Genes",pch=20,col="dodgerblue2")
-abline(lm(dtfs[,1] ~ dtfs[,2]),lwd=4)
+pdf(paste0(outbin,olapplots),width=10,height=6)
+par(mar=c(5,5,2,2)+0.1)
+plot(dtfs[,2],dtfs[,1],las=1,cex.lab=2,cex=2,xlab="Differentially Expressed Transcription Factors",ylab="Differentially Expressed Genes",pch=20,col="dodgerblue2")
+abline(lm(dtfs[,1] ~ dtfs[,2]),lwd=4,lty="dashed")
 text(5,3500,paste("R^2 = ",round(cor(dtfs[,2],dtfs[,1],use="pairwise.complete.obs")^2,2)))
-plot(tfperccomm,deperccomm,pch=20,las=1,xlab="Percent of DE TFs in Common",ylab="Percent of DE Genes in Common")
+plot(tfperccomm,deperccomm,pch=20,cex.lab=2,las=1,xlab="Fraction of DE TFs in Common",ylab="Fraction of DE Genes in Common")
 abline(liner,col="tomato",lwd=4)
 text(0.05,0.35,paste("R^2 = ",round(cor(tfperccomm,deperccomm,use="pairwise.complete.obs")^2,2)))
 
-plot(1:10,1:10,type="n",ylim=c(min(ys),max(ys)),las=1,xaxt="n",
+plot(1:10,1:10,type="n",ylim=c(min(ys),max(ys)),las=1,cex.lab=2,xaxt="n",
      xlab = "No. DE TFs in Common",ylab = "Degree of Binding")
 axis(side=1,at=1:10,labels=c(1:9,"10+"))
 polygon(xs,ys,col="mediumseagreen",border="mediumseagreen")

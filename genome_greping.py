@@ -25,11 +25,17 @@ for gene in genelist:
 	currf = open(factors,'r')
 	currfactor = []
 	currdowns = []
+	currcentifactor = []
+	currcentidowns = []
 	for line in currf:
 		if line.strip().split()[0] in currtf:
 			currfactor.append(line.strip().split()[1])
+			if len(line.strip().split()[1].split('_')) == 1:
+				currcentifactor.append(line.strip().split()[1])
 		if line.strip().split()[0] in currdownstream:
 			currdowns.append(line.strip().split()[1])
+			if len(line.strip().split()[1].split('_')) == 1:
+				currcentidowns.append(line.strip().split()[1])
 
 	currf.close()
 	currfactor = set(currfactor)
@@ -54,12 +60,15 @@ for gene in genelist:
 		eleveneleven = open(outdir + 'GrepCage/' + gene + '.down.deboundplus.cage','w')
 		twelvetwelve = open(outdir + 'GrepChipvCenti/' + gene + '.down.deboundplus.chipvcenti','w')
 	for line in master:
+		strand = 1
 		liner = line.strip().split()
 		if len(liner) < 7:
 			continue
+		if liner[5] == '-':
+			strand = -1
 		if liner[9] in currfactor:
 			if liner[3] in currbound:
-				print >> one, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))
+				print >> one, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
 				if liner[3] not in tfcagegenes:
 					if '_' in liner[4]:
 						print >> two, liner[4].split('_')[0]
@@ -71,7 +80,7 @@ for gene in genelist:
 					chiper = 'centi'
 				print >> three, chiper
 			if liner[3] in currde:
-				print >> oneone, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))
+				print >> oneone, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
 				if liner[3] not in tfcagegenes:
 					if '_' in liner[4]:
 						print >> twotwo, liner[4].split('_')[0]
@@ -84,7 +93,7 @@ for gene in genelist:
 				print >> threethree, chiper
 		if liner[9] in currdowns:
 			if liner[3] in currboundplus:
-				print >> ten, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))
+				print >> ten, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
 				if liner[3] not in downcagegenes:
 					if '_' in liner[4]:
 						print >> eleven, liner[4].split('_')[0]
@@ -96,7 +105,7 @@ for gene in genelist:
 					chiper = 'centi'
 				print >> twelve, chiper
 			if liner[3] in currdeplus:
-				print >> tenten, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))
+				print >> tenten, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
 				if liner[3] not in downcagegenes:
 					if '_' in liner[4]:
 						print >> eleveneleven, liner[4].split('_')[0]
@@ -115,14 +124,14 @@ for gene in genelist:
 
 	print 'Splitting Centipede Records...'
 	master = open(centifile,'r')
-	if len(currfactor) > 0:
+	if len(currcentifactor) > 0:
 		one = open(outdir + 'GrepPhastCons/' + gene + '.tf.bound.phast','w')
 		two = open(outdir + 'GrepPWM/' + gene + '.tf.bound.pwm','w')
 		three = open(outdir + 'GrepPosterior/' + gene + '.tf.bound.post','w')
 		oneone = open(outdir + 'GrepPhastCons/' + gene + '.tf.debound.phast','w')
 		twotwo = open(outdir + 'GrepPWM/' + gene + '.tf.debound.pwm','w')
 		threethree = open(outdir + 'GrepPosterior/' + gene + '.tf.debound.post','w')
-	if len(currdowns) > 0:
+	if len(currcentidowns) > 0:
 		ten = open(outdir + 'GrepPhastCons/' + gene + '.down.boundplus.phast','w')
 		eleven = open(outdir + 'GrepPWM/' + gene + '.down.boundplus.pwm','w')
 		twelve = open(outdir + 'GrepPosterior/' + gene + '.down.boundplus.post','w')
@@ -131,7 +140,7 @@ for gene in genelist:
 		twelvetwelve = open(outdir + 'GrepPosterior/' + gene + '.down.deboundplus.post','w')
 	for line in master:
 		liner = line.strip().split()
-		if liner[9] in currfactor:
+		if liner[9] in currcentifactor:
 			if liner[3] in currbound:
 				print >> one, liner[13]
 				print >> two, liner[12]
@@ -140,7 +149,7 @@ for gene in genelist:
 				print >> oneone, liner[13]
 				print >> twotwo, liner[12]
 				print >> threethree, liner[10]
-		if liner[9] in currdowns:
+		if liner[9] in currcentidowns:
 			if liner[3] in currboundplus:
 				print >> ten, liner[13]
 				print >> eleven, liner[12]
@@ -150,7 +159,7 @@ for gene in genelist:
 				print >> eleveneleven, liner[12]
 				print >> twelvetwelve, liner[10]
 
-	if len(currfactor) > 0:
+	if len(currcentifactor) > 0:
 		one.close(),two.close(),three.close(),oneone.close(),twotwo.close(),threethree.close()
-	if len(currdowns) > 0:
+	if len(currcentidowns) > 0:
 		ten.close(),eleven.close(),twelve.close(),tenten.close(),eleveneleven.close(),twelvetwelve.close()
