@@ -7,8 +7,8 @@ genelists = os.listdir(grepdir)
 genelist = sorted(set([x.split('.')[0] for x in genelists]))
 #genelist = ['ARNTL2_old']
 factors = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt'
-masterfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/results10kb_combined_sorted.bed'
-centifile = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/FinalAnnots/10kbresults_phastcons.bed'
+masterfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/results10kb_combined_midpoint_sorted.bed'
+centifile = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/FinalAnnots/10kbresults_phastcons_sorted_midpoint.bed'
 
 def genereader(thisfile):
 	currfile = open(thisfile,'r')
@@ -68,24 +68,20 @@ for gene in genelist:
 			strand = -1
 		if liner[9] in currfactor:
 			if liner[3] in currbound:
-				print >> one, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
+				#print >> one, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
+				print >> one, strand*(int(liner[8]) - int(liner[2]))
 				if liner[3] not in tfcagegenes:
-					if '_' in liner[4]:
-						print >> two, liner[4].split('_')[0]
-					else:
-						print >> two, liner[4]
+					print >> two, liner[4].split('_')[0]
 					tfcagegenes.append(liner[3])
 				chiper = 'chip'
 				if len(liner[9].split('_')) < 2:
 					chiper = 'centi'
 				print >> three, chiper
 			if liner[3] in currde:
-				print >> oneone, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
+				#print >> oneone, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
+				print >> oneone, strand*(int(liner[8]) - int(liner[2]))
 				if liner[3] not in tfcagegenes:
-					if '_' in liner[4]:
-						print >> twotwo, liner[4].split('_')[0]
-					else:
-						print >> twotwo, liner[4]
+					print >> twotwo, liner[4].split('_')[0]
 					tfcagegenes.append(liner[3])
 				chiper = 'chip'
 				if len(liner[9].split('_')) < 2:
@@ -93,24 +89,20 @@ for gene in genelist:
 				print >> threethree, chiper
 		if liner[9] in currdowns:
 			if liner[3] in currboundplus:
-				print >> ten, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
+				#print >> ten, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
+				print >> ten, strand*(int(liner[8]) - int(liner[2]))
 				if liner[3] not in downcagegenes:
-					if '_' in liner[4]:
-						print >> eleven, liner[4].split('_')[0]
-					else:
-						print >> eleven, liner[4]
+					print >> eleven, liner[4].split('_')[0]
 					downcagegenes.append(liner[3])
 				chiper = 'chip'
 				if len(liner[9].split('_')) < 2:
 					chiper = 'centi'
 				print >> twelve, chiper
 			if liner[3] in currdeplus:
-				print >> tenten, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
+				#print >> tenten, int(round(((float(liner[7])+float(liner[8]))/2) - float(liner[2]),0))*strand
+				print >> tenten, strand*(int(liner[8]) - int(liner[2]))
 				if liner[3] not in downcagegenes:
-					if '_' in liner[4]:
-						print >> eleveneleven, liner[4].split('_')[0]
-					else:
-						print >> eleveneleven, liner[4]
+					print >> eleveneleven, liner[4].split('_')[0]
 					downcagegenes.append(liner[3])
 				chiper = 'chip'
 				if len(liner[9].split('_')) < 2:
@@ -140,6 +132,8 @@ for gene in genelist:
 		twelvetwelve = open(outdir + 'GrepPosterior/' + gene + '.down.deboundplus.post','w')
 	for line in master:
 		liner = line.strip().split()
+		if len(liner) < 7:
+			continue
 		if liner[9] in currcentifactor:
 			if liner[3] in currbound:
 				print >> one, liner[13]
