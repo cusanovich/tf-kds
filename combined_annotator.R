@@ -141,22 +141,22 @@ for(i in 4:dim(master[[2]])[2]){
   down.t = c(down.t,t.test(down[[length(down)-1]],down[[length(down)]])$statistic)
 }
 
-u.bound = wilcox.test(unlist(bound.de),unlist(bound.bound),na.rm=T)$p.value
-u.down = wilcox.test(unlist(down.de),unlist(down.bound),na.rm=T)$p.value
-u.binary = wilcox.test(unlist(binary.de),unlist(binary.bound),na.rm=T)$p.value
+u.bound = signif(wilcox.test(unlist(bound.de),unlist(bound.bound),na.rm=T)$p.value,4)
+u.down = signif(wilcox.test(unlist(down.de),unlist(down.bound),na.rm=T)$p.value,4)
+u.binary = signif(wilcox.test(unlist(binary.de),unlist(binary.bound),na.rm=T)$p.value,4)
 
 pdf("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/NumTFsBindingDEGenes.pdf")
-par(mfrow=c(1,1))
-boxplot(unlist(bound.de),unlist(bound.bound),na.rm=T,log="y",
-        col=c("tomato","dodgerblue2"),las=1,ylab="No. of Binding Events",
+par(mfrow=c(2,2))
+boxplot(unlist(bound.de),unlist(bound.bound),na.rm=T,log="y",outline=F,
+        col=c("indianred","dodgerblue2"),las=1,ylab="No. of Binding Events",
         main=paste0("Kd Binding Only\nP-value = ",format(u.bound)),
-        names=c("DE","Bound Only"),pch=20,outcol=c("tomato","dodgerblue2"))
-boxplot(unlist(down.de),unlist(down.bound),na.rm=T,log="y",
-        col=c("tomato","dodgerblue2"),las=1,ylab="No. of Binding Events",
+        names=c("DE","Bound Only"),pch=20,notch=T)
+boxplot(unlist(down.de),unlist(down.bound),na.rm=T,log="y",outline=F,
+        col=c("indianred","dodgerblue2"),las=1,ylab="No. of Binding Events",
         main=paste0("Kd & Downstream Binding\nP-value = ",format(u.down)),
-        names=c("DE","Bound Only"),pch=20,outcol=c("tomato","dodgerblue2"))
-boxplot(unlist(binary.de),unlist(binary.bound),na.rm=T,log="y",
-        col=c("tomato","dodgerblue2"),las=1,ylab="No. of Factors Binding",
+        names=c("DE","Bound Only"),pch=20,notch=T)
+boxplot(unlist(binary.de),unlist(binary.bound),na.rm=T,log="y",outline=F,
+        col=c("indianred","dodgerblue2"),las=1,ylab="No. of Factors Binding",
         main=paste0("Factor Variety\nP-value = ",format(u.binary)),
-        names=c("DE","Bound Only"),pch=20,outcol=c("tomato","dodgerblue2"))
+        names=c("DE","Bound Only"),pch=20,notch=T)
 dev.off()

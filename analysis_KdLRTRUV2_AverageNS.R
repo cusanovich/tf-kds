@@ -7,10 +7,10 @@ Args <- commandArgs(TRUE)
 #Args =c("HCST","expr_firstbatch_ruv2")
 print(Args[1])
 print(Args[2])
-resultsbin = "../Results/RUV2_NSAveraged_Results/"
+resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/Update_RUV2_NSAveraged_Results/"
 
 print('Loading expression file...')
-expr = as.matrix(read.table(paste("../Exprs/",Args[2],".txt",sep="")))
+expr = as.matrix(read.table(paste("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Exprs/",Args[2],".txt",sep="")))
 
 
 print('Loading NS arrays...')
@@ -18,8 +18,8 @@ batches = c("oldbatch","firstbatch","secondbatch")
 currbatch = strsplit(Args[2],"_")[[1]][2]
 batches = batches[-match(currbatch,batches)]
 nsa = expr[,grep("NS",colnames(expr))]
-nsb = as.matrix(read.table(paste("../Exprs/",gsub(currbatch,batches[1],Args[2]),".txt",sep="")))
-nsc = as.matrix(read.table(paste("../Exprs/",gsub(currbatch,batches[2],Args[2]),".txt",sep="")))
+nsb = as.matrix(read.table(paste("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Exprs/",gsub(currbatch,batches[1],Args[2]),".txt",sep="")))
+nsc = as.matrix(read.table(paste("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Exprs/",gsub(currbatch,batches[2],Args[2]),".txt",sep="")))
 nsb = nsb[,grep("NS",colnames(nsb))]
 nsc = nsc[,grep("NS",colnames(nsc))]
 nsclass = list("NS1","NS2","NS3","NS4",c("NS_P1","NS_P3"),c("NS_P2","NS_P6"))
@@ -49,7 +49,7 @@ for(i in 1:6){
 colnames(ns_expr) = c("NS1","NS2","NS3","NS4","NS_P1","NS_P2")
 
 print('Loading detection file...')
-detection = read.table("../Exprs/Detection_Scores_All3.txt")
+detection = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Exprs/Detection_Scores_All3.txt")
 
 print('Cleaning up a bit...')
 nsout.ind = grep("NS",colnames(expr))
@@ -70,7 +70,15 @@ detgood = union(det.ns,det.tf)
 svatable = svastable[detgood,]
 probing = droplevels(probings[detgood])
 
-expr_batch = svatable
+probereport = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_NoGM19238SNPs_NoChrY_Stranded_OneProbePerGene.txt",header=T)
+probereport.ind = match(probing,probereport[,4])
+probereportupdate = probereport[probereport.ind,]
+probereportupdate = probereportupdate[!is.na(probereport.ind),]
+genes = probereportupdate[,7:8]
+probes.ind = match(probereportupdate[,4],probing)
+probing = probing[probes.ind]
+
+expr_batch = svatable[probes.ind,]
 
 print('Building dataframe...')
 ns.ind = grep("NS",colnames(expr_batch))
@@ -106,6 +114,7 @@ nullmodels <- dlply(tftable, "V1", function(lmfit) lm(lmfit$V2 ~ 1))
 nullresults <- ldply(nullmodels, logLik)
 rm(nullmodels)
 probeorder <- levels(probing)
+probe.ind = match(probeorder,probing)
 
 print('Calculating P-values...')
 lrt <- 2*(lnresults[,1]-nullresults[,1])
@@ -114,12 +123,9 @@ qlrt = qvalue(plrt)$qvalues
 fivepercers = which(qlrt <= 0.05)
 fiveperc = length(fivepercers)
 fivecol = rep("black",times=length(qlrt))
-fivecol[fivepercers] = "orange"
-
-probereport = read.table("../Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_NoGM19238SNPs_NoChrY_Stranded.txt",header=T)
-probereport.ind = match(probeorder,probereport[,4])
-genes = probereport[probereport.ind,7:8]
-probe.ind = match(probeorder,probing)
+fivecol[fivepercers] = "goldenrod"
+fivecex = rep(0.5,times=length(qlrt))
+fivecex[fivepercers] = 1
 
 # Calculate stats for MA plot and Volcano plot
 meanns = apply(expr_batch[,ns.ind],1,mean)
@@ -130,7 +136,7 @@ meanns = meanns[probe.ind]
 meantf = meantf[probe.ind]
 a = a[probe.ind]
 m = m[probe.ind]
-tfprobes = which(genes[,2] == Args[1])
+tfprobes = which(genes[probe.ind,2] == Args[1])
 
 # Calculate stats for QQplot
 obsp <- -log10(plrt)
@@ -158,34 +164,34 @@ hist(plrt,main=paste(Args[1],"\nNo. Probes = ",N),xlab="P-values")
 # QQPlot
 plot(1,1, type="n", xlim=c(0,max(null)+1),ylim=c(0,max(obsp)+1),xlab="Expected", ylab="Observed",main=Args[1])
 polygon(xx, yy, col="gray",border="gray")
-lines(null,null,col="blue",lwd=2)
+lines(null,null,col="dodgerblue2",lwd=2)
 points(sort(null),sort(obsp),pch=20,cex=0.5)
 if(length(tfprobes) > 0){
   for(i in 1:length(tfprobes)){
     points(sort(null)[which(sort(obsp) == obsp[tfprobes[i]])],obsp[tfprobes[i]],
-           pch=20,cex=1.2,col="red")
+           pch=20,cex=1.2,col="indianred")
   }
 }
 
 # MA plot
-plot(a,m,pch=20,ylim=c(min(-1,min(m)),max(1,max(m))),cex=0.5,main=Args[1],
+plot(a,m,pch=20,ylim=c(min(-1,min(m)),max(1,max(m))),cex=fivecex,main=Args[1],
      xlab="A",ylab="M",col=fivecol)
 if(length(tfprobes) > 0){
-  points(a[tfprobes],m[tfprobes],pch=20,col="red",cex=1.5)
+  points(a[tfprobes],m[tfprobes],pch=20,col="indianred",cex=1.5)
 }
-abline(h=0,lty="dashed",lwd=2,col="blue")
+abline(h=0,lty="dashed",lwd=2,col="dodgerblue2")
 
 # Volcano plot
 plot(m,-log10(plrt),xlim=c(min(-1,min(m)),max(1,max(m))),cex=0.5,pch=20,
      main=paste(Args[1],"\n5% FDR = ",fiveperc," probes",sep=""),
      xlab="Log2(Fold-Change)",ylab="-Log10(P-value)")
 if(length(tfprobes) > 0){
-  points(m[tfprobes],-log10(plrt[tfprobes]),pch=20,col="red",cex=1.5)
+  points(m[tfprobes],-log10(plrt[tfprobes]),pch=20,col="indianred",cex=1.5)
 }
 if(fiveperc > 0){
 #  abline(h=-log10(plrt[which(qlrt == max(qlrt[qlrt <= 0.01]))[1]]),lty="dashed",lwd=2,col="blue")
   abline(h=-log10(plrt[which(qlrt == max(qlrt[qlrt <= 0.05]))[1]]),lty="dashed",
-         lwd=2,col="blue")
+         lwd=2,col="dodgerblue2")
 }
 
 par(mfrow=c(1,1))
@@ -207,34 +213,34 @@ hist(plrt,main=paste(Args[1],"\nNo. Probes = ",N),xlab="P-values")
 plot(1,1, type="n", xlim=c(0,max(null)+1),ylim=c(0,max(obsp)+1),xlab="Expected",
      ylab="Observed",main=Args[1])
 polygon(xx, yy, col="gray",border="gray")
-lines(null,null,col="blue",lwd=2)
+lines(null,null,col="dodgerblue2",lwd=2)
 points(sort(null),sort(obsp),pch=20,cex=0.5)
 if(length(tfprobes) > 0){
   for(i in 1:length(tfprobes)){
     points(sort(null)[which(sort(obsp) == obsp[tfprobes[i]])],obsp[tfprobes[i]],
-           pch=20,cex=1.2,col="red")
+           pch=20,cex=1.2,col="indianred")
   }
 }
 
 # MA plot
-plot(a,m,pch=20,ylim=c(min(-1,min(m)),max(1,max(m))),cex=0.5,main=Args[1],xlab="A",
+plot(a,m,pch=20,ylim=c(min(-1,min(m)),max(1,max(m))),cex=fivecex,main=Args[1],xlab="A",
      ylab="M",col=fivecol)
 if(length(tfprobes) > 0){
-  points(a[tfprobes],m[tfprobes],pch=20,col="red",cex=1.5)
+  points(a[tfprobes],m[tfprobes],pch=20,col="indianred",cex=1.5)
 }
-abline(h=0,lty="dashed",lwd=2,col="blue")
+abline(h=0,lty="dashed",lwd=2,col="dodgerblue2")
 
 # Volcano plot
 plot(m,-log10(plrt),xlim=c(min(-1,min(m)),max(1,max(m))),cex=0.5,pch=20,
      main=paste(Args[1],"\n5% FDR = ",fiveperc," probes",sep=""),
      xlab="Log2(Fold-Change)",ylab="-Log10(P-value)")
 if(length(tfprobes) > 0){
-  points(m[tfprobes],-log10(plrt[tfprobes]),pch=20,col="red",cex=1.5)
+  points(m[tfprobes],-log10(plrt[tfprobes]),pch=20,col="indianred",cex=1.5)
 }
 if(fiveperc > 0){
 #  abline(h=-log10(plrt[which(qlrt == max(qlrt[qlrt <= 0.01]))[1]]),lty="dashed",lwd=2,col="blue")
   abline(h=-log10(plrt[which(qlrt == max(qlrt[qlrt <= 0.05]))[1]]),lty="dashed",
-         lwd=2,col="blue")
+         lwd=2,col="dodgerblue2")
 }
 dev.off()
 
