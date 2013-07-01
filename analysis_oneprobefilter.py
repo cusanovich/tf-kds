@@ -7,12 +7,16 @@ if(len(sys.argv)!= 3):
 
 report = open(sys.argv[1],'r')
 filtered = open(sys.argv[2],'w')
+ensemblfile = open('/mnt/lustre/home/cusanovich/Kd_Arrays/Centipede/Annotation/HT12expr_ensemblTSScombinedsorted.bed','r')
+ensemblgenes = set([x.strip().split()[3] for x in ensemblfile.readlines()])
 
 genes = {}
 for line in report:
     if 'probeID' in line:
         continue
     gene = line.strip().split()[6]
+    if gene not in ensemblgenes:
+        continue
     if gene not in genes.keys():
         genes[gene] = line.strip().split()
         continue
