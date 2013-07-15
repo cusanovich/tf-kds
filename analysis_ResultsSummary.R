@@ -1,6 +1,7 @@
 library('plyr')
 library('gplots')
-resultsbin = "../Results/RUV2_NSAveraged_Results/"
+library('beanplot')
+resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
 
 all.pvals <- list.files(path = resultsbin,pattern="Pvalues.txt")
 pvals <- llply(paste(resultsbin,all.pvals,sep=""), read.table)
@@ -29,20 +30,41 @@ batchers[i] = strsplit(all.pdfs[i],"_")[[1]][2]
 }
 batchers= as.factor(batchers)
 
-master = pvals[[1]][,c(4:6,2)]
-names(master)[4] = namers[1]
-for(i in 2:length(namers)){
-  master = merge(master,pvals[[i]][,c(4,2)],by="ProbeID",all=T)
-  names(master)[(3+i)] = namers[i]
+kdlevels = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/TargetKdLevels.txt")
+avekds = apply(kdlevels[,2:4],1,mean)
+varkds = apply(kdlevels[,2:4],1,var)
+#Build a master list of matrices that contains all P-values, Q-values, and Log2(FC) for each knockdown.  Genes DE are coded with a 5 instead of 'NA'.
+master = list()
+for(j in 1:3){
+  master[[j]] = pvals[[1]][,c(4:6,j)]
+  names(master)[j] = colnames(pvals[[1]])[j]
+  names(master[[j]])[4] = namers[1]
+  for(i in 2:length(namers)){
+    newbies = setdiff(as.character(pvals[[i]][,4]),master[[j]][,1])
+    master[[j]] = merge(master[[j]],pvals[[i]][,c(4,j)],by="ProbeID",all=T)
+    master[[j]][,1] = as.character(master[[j]][,1])
+    master[[j]][,2] = as.character(master[[j]][,2])
+    master[[j]][,3] = as.character(master[[j]][,3])
+    names(master[[j]])[(3+i)] = namers[i]
+    if(length(newbies) == 0){
+      next
+    }
+    updates = match(newbies,as.character(pvals[[i]][,4]))
+    places = match(newbies,master[[j]][,1])
+    master[[j]][places,2] = as.character(pvals[[i]][updates,5])
+    master[[j]][places,3] = as.character(pvals[[i]][updates,6])
+  }
+  
+  for(k in 4:dim(master[[j]])[2]){
+    curcol = master[[j]][,k]
+    master[[j]][which(is.na(curcol)),k] = 5
+  }
 }
+master[[2]] = master[[2]][match(master[[1]][,2],master[[2]][,2]),]
+master[[3]] = master[[3]][match(master[[1]][,2],master[[3]][,2]),]
 
-for(i in 4:dim(master)[2]){
-  curcol = master[,i]
-  master[which(is.na(curcol)),i] = 5
-}
-
-master.overlap = rowSums(master[,4:dim(master)[2]] < 0.05)
-lessthanfive = master[which(master.overlap < 5),1]
+master.overlap = rowSums(master[[2]][,4:dim(master[[2]])[2]] < 0.05)
+lessthanfive = master[[2]][which(master.overlap < 5),1]
 
 
 summar = matrix(NA,length(counts),3)
@@ -54,6 +76,18 @@ for(i in 1:length(counts)){
 names(summar) = c("Factor","TotalProbes","SigProbes")
 write.table(summar,paste(resultsbin,"SummaryCounts.txt",sep=""),row.names=F,quote=F,sep="\t")
 
+effects = list()
+directions = list()
+ups = c()
+for(i in 4:dim(master[[3]])[2]){
+  directions[[i-3]] = master[[3]][master[[2]][,i] < 0.05,i]
+  ups[i-3] = length(which(master[[3]][master[[2]][,i] < 0.05,i] > 0))/length(master[[3]][master[[2]][,i] < 0.05,i])
+  effects[[i-3]] = abs(master[[3]][master[[2]][,i] < 0.05,i])
+}
+
+densedirs = llply(directions,density)
+denseffects = llply(effects,density)
+
 batchcol = c("black","blue","red")[unlist(batchers)]
 pdf(paste(resultsbin,"SummaryPlots.pdf",sep=""),height=11,width=8.5)
 barplot(as.numeric(summar[,2]),names.arg=names.clean,las=2,cex.names=0.8,col=batchcol,ylim=c(0,(max(as.numeric(summar[,2]))+3000)),
@@ -63,9 +97,56 @@ barplot(as.numeric(summar[,2]),names.arg=names.clean,las=2,cex.names=0.8,col=bat
 degenes = as.numeric(summar[,3])
 inder = order(degenes)
 bp = barplot(degenes[inder],horiz=T,names.arg=names.clean[inder],xlim=c(0,(max(degenes)+3000)),
-    las=2,cex.names=0.8,col=batchcol[inder],main="No. DE Genes",xlab="No. Probes",
+    las=2,cex.names=0.8,col=batchcol[inder],main="No. DE Genes",xlab="No. Genes",
     legend.text=c("Batch 1","Batch 2","Batch 3"),args.legend = list(fill=c("blue","red","black")))
 text(x=degenes[inder],y=bp,labels=degenes[inder],cex=0.8,pos=4)
+bp2 = barplot(degenes[inder],horiz=T,names.arg=names.clean[inder],xlim=c(0,(max(degenes)+1100)),
+              las=1,cex.names=0.8,col="indianred",main="No. DE Genes",xlab="No. Genes",)
+text(x=degenes[inder],y=bp2,labels=degenes[inder],cex=0.8,pos=4)
+par(mfrow=c(1,1))
+par(oma=c(4,4,4,4) + 0.1)
+par(mgp=c(3,1,0))
+par(mar=c(5, 5, 4, 2) + 0.1)
+plot(avekds,log10(as.numeric(summar[,3])),pch=20,col="dodgerblue2",
+     cex=1.5,las=1,xlab="Knockdown Level",ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5)
+x = round(cor(avekds,log10(as.numeric(summar[,3])))^2,2)
+legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
+par(mfrow=c(2,1))
+par(oma=c(0,4,0,4) + 0.1)
+boxplot(directions,outline=F,las=2,names=names.clean,axes=F)
+axis(1, at = 1:59, labels = names.clean,las=2,cex.axis=0.4)
+axis(2,las=2)
+box()
+abline(h=0,lwd=3)
+boxplot(directions,outline=F,add=T,col="dodgerblue2",axes=F)
+beanplot(directions,ylab="Log2(Fold-Change)",names=names.clean,las=2,cex.lab=1.5,axes=F,beanlines="median",what=c(1,1,1,0),col="dodgerblue2")
+axis(1, at = 1:59, labels = names.clean,las=2,cex.axis=0.4)
+axis(2,las=2)
+box()
+plot(densedirs[[1]],xlab="Log2(Fold-Change)",ylim=c(0,4.5),las=1,lwd=2,cex.lab=2,col="dodgerblue2")
+for(i in 2:length(densedirs)){
+  lines(densedirs[[i]],col="dodgerblue2",lwd=2)
+}
+boxplot(effects,outline=F,col="indianred",las=2,cex.lab=2,axes=F,ylab="Log2(Fold-Change)",cex.lab=1.5)
+axis(1, at = 1:59, labels = names.clean,las=2,cex.axis=0.4)
+axis(2,las=2)
+box()
+beanplot(effects,ylab="Log2(Fold-Change)",names=names.clean,col="indianred",las=2,log="",cex.lab=1.5,beanlines="median",what=c(1,1,1,0),overallline="median",axes=F)
+axis(1, at = 1:59, labels = names.clean,las=2,cex.axis=0.4)
+axis(2,las=2)
+box()
+plot(denseffects[[1]],xlab="Absolute Log2(Fold-Change)",ylim=c(0,13),las=1,lwd=2,cex.lab=2,col="indianred")
+for(i in 2:length(denseffects)){
+  lines(denseffects[[i]],col="indianred",lwd=2)
+}
+boxplot(ups,notch=T,outpch=20,boxlwd=3,medlwd=4,las=1,cex=2,cex.lab=1.5,col="indianred",outcol="indianred",ylab="Fraction of Genes Repressed")
+abline(h=0.5,lty=3)
+boxplot(ups,notch=T,outpch=20,boxlwd=3,medlwd=4,add=T,axes=F,col="indianred",outcol="indianred")
+plot(seq(-.5,.5,length.out=6),seq(0,4.5,length.out=6),cex.lab=1.5,type="n",xlab="Log2(Fold-Change)",ylab="Density",las=1)
+abline(v=0,lty="dashed")
+polygon(density(unlist(directions)),col="dodgerblue2")
+legend("topright","Repressed Genes",bty="n")
+legend("topleft","Enhanced Genes",bty="n")
 dev.off()
 
 results.m = matrix(NA,1,4)
@@ -204,7 +285,7 @@ for(i in 1:length(namers)){
 colnames(results.heat.ma) = names.clean
 rownames(results.heat.ma) = names.clean
 
-resultsmatrix = master[,4:dim(master)[2]]
+resultsmatrix = master[[2]][,4:dim(master[[2]])[2]]
 resultsbinary = resultsmatrix<0.05
 resultsbinary = resultsbinary + 0
 keepers = resultsmatrix < 2

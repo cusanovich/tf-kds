@@ -1,16 +1,33 @@
 library('gplots')
 library('plyr')
-resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_Results/"
+resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
 outbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/"
-outplots = "4factorresultsplots_RUV2_NSAveraged_10kb.pdf"
-outtables = "4RUV2_NSAveraged_FACTOR_10kbBindingWindow_"
-olapplots = "4overlapplots_RUV2_NSAveraged_10kb.pdf"
+resultsmatrix = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/allbindingresults10kb.txt",sep="\t"))
+binary.phi = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/PhiTables/AllFactorBinding10kbPhis.txt"))
+factors = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt"))
+nobfactors = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/nobinding_list.txt"))
+censusfactors = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/TFcensus.txt",
+                                     sep="\t",fill=NA,header=T))
+#resultsbin = "~/home/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
+#outbin = "~/home/Kd_Arrays/CombinedBinding/Results/"
+#resultsmatrix = as.matrix(read.table("~/home/Kd_Arrays/CombinedBinding/allbindingresults10kb.txt",sep="\t"))
+#binary.phi = as.matrix(read.table("~/home/Kd_Arrays/CombinedBinding/PhiTables/AllFactorBinding10kbPhis.txt"))
+#factors = as.matrix(read.table("~/home/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt"))
+#nobfactors = as.matrix(read.table("~/home/Kd_Arrays/CombinedBinding/Annotations/nobinding_list.txt"))
+#censusfactors = as.matrix(read.table("~/home/Kd_Arrays/CombinedBinding/Annotations/TFcensus.txt",sep="\t",fill=NA,header=T))
+outplots = "5factorresultsplots_RUV2_NSAveraged_10kb.pdf"
+outtables = "5RUV2_NSAveraged_FACTOR_10kbBindingWindow_"
+olapplots = "5overlapplots_RUV2_NSAveraged_10kb.pdf"
 de_threshold = 0.05
 relaxed_threshold = 0.2
-resultsmatrix = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/allbindingresults10kb.txt",sep="\t"))
 resultsbinary = resultsmatrix
-binary.phi = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/PhiTables/AllFactorBinding10kbPhis.txt"))
-factors = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt")
+censusfactors = censusfactors[,c(1,2,6)]
+censusfactors = censusfactors[censusfactors[,1] != 'x',]
+censusfactors = censusfactors[censusfactors[,1] != 'c',]
+censusensg = setdiff(censusfactors[,2],nobfactors[,2])
+censusensg = setdiff(censusensg,factors[,3])
+censusfactors = censusfactors[match(censusensg,censusfactors[,2]),]
+nobbers = rbind(censusfactors[,c(3,2)],nobfactors)
 
 #Create a list of all knockdown experiments from teh resultsbin
 all.pvals <- list.files(path = resultsbin,pattern="Pvalues.txt")
@@ -29,12 +46,13 @@ for(j in 1:3){
   names(master)[j] = colnames(pvals[[1]])[j]
   names(master[[j]])[4] = namers[1]
   for(i in 2:length(namers)){
+    #if(i == 22 | i == 46){next}
     newbies = setdiff(as.character(pvals[[i]][,4]),master[[j]][,1])
     master[[j]] = merge(master[[j]],pvals[[i]][,c(4,j)],by="ProbeID",all=T)
     master[[j]][,1] = as.character(master[[j]][,1])
     master[[j]][,2] = as.character(master[[j]][,2])
     master[[j]][,3] = as.character(master[[j]][,3])
-    names(master[[j]])[(3+i)] = namers[i]
+    names(master[[j]])[dim(master[[j]])[2]] = namers[i]
     if(length(newbies) == 0){
       next
     }
@@ -52,6 +70,10 @@ for(j in 1:3){
 master[[2]] = master[[2]][match(master[[1]][,2],master[[2]][,2]),]
 master[[3]] = master[[3]][match(master[[1]][,2],master[[3]][,2]),]
 
+nobbers = nobbers[nobbers[,2] %in% master[[2]][,2],]
+winning = unique(c(factors[,3],nobbers[,2]))
+
+
 #Plot the gene binding correlations
 pdf(paste0(outbin,outplots),height=11,width=8.5)
 heatmap.2(binary.phi,trace="none",main="Binding Phi Correlations",
@@ -66,33 +88,37 @@ colnames(bindingmatrix) = c("TF","Motif Set","Expressed Genes","Bound Genes",
                             "Bound+ Genes","Bound+ DE Genes",
                             "Relaxed Bound+ DE Genes","FET+")
 bindinglist = list()
-rbindinglist = list()
 winnertfs = list()
+winnernobbers = list()
 mastermatch = c()
-for(i in 1:length(names(master[[2]]))){
-  mastermatch[i] = strsplit(names(master[[2]])[i],"_")[[1]][1]
+for(i in 4:length(names(master[[2]]))){
+  mastermatch[i-3] = strsplit(names(master[[2]])[i],"_")[[1]][1]
 }
-listgene = intersect(colnames(resultsmatrix),mastermatch)
-sp1.ind = match("SP1",listgene)
-listgene = c(listgene[1:sp1.ind],"SP1",listgene[(sp1.ind+1):length(listgene)])
-sp1 = 0
-dtfs = matrix(0,61,4)
+dtfs = matrix(0,59,3)
 dtf.names = c()
+boundps = list()
+sampleps = list()
 for(i in 4:dim(master[[2]])[2]){
   currgene = names(master[[2]])[i]
   matchgene = strsplit(currgene,"_")[[1]][1]
-  commongenes = intersect(unique(master[[2]][which(master[[2]][,i]< 5),2]),rownames(resultsmatrix))
+  commongenes = intersect(master[[2]][which(master[[2]][,i]< 5),2],rownames(resultsmatrix))
   commonind = match(commongenes,master[[2]][,2])
   currmaster = master[[2]][commonind,c(2,i)]
   winners = unique(currmaster[which(currmaster[,2]<= de_threshold),1])
-  winnerfactors = factors$V3[factors$V3 %in% winners]
-  winnerfactors = setdiff(winnerfactors,factors[match(matchgene,factors[,1]),3])
-  winnerfactornames = as.character(factors[match(winnerfactors,factors$V3),1])
+  winnerfactors = intersect(winners,factors[,3])
   dtfs[i-3,1] = length(winners)
   dtfs[i-3,2] = length(winnerfactors)
+  dtfs[i-3,3] = length(intersect(winners,winning))
   dtf.names[i-3] = matchgene
+  winnerfactors = setdiff(winnerfactors,factors[match(matchgene,factors[,1]),3])
+#  winnernobfactors = nobfactors[,2][nobfactors[,2] %in% winners]
+#  winnernobfactors = setdiff(winnernobfactors,factors[match(matchgene,nobfactors[,1]),2])
+#  winnercensusfactors = censusfactors[,2][censusfactors[,2] %in% winners]
+  winnerfactornames = as.character(factors[match(winnerfactors,factors[,3]),1])
   winnertfs[[i-3]] = c(matchgene,winnerfactornames)
   names(winnertfs)[i-3] = currgene
+  winnernobbers[[i-3]] = intersect(winners,winning)
+  names(winnernobbers)[i-3] = currgene
   currresultsmatrix = resultsmatrix[match(commongenes,rownames(resultsmatrix)),]
   matrixcol = grep(matchgene,colnames(currresultsmatrix))
   downstreamcol = matrixcol
@@ -134,27 +160,51 @@ for(i in 4:dim(master[[2]])[2]){
   }
   p.relaxed = phyper(q.relaxed,m.relaxed,n.relaxed,k, lower.tail=FALSE)
   p.down = phyper(q.down,m,n,k.down,lower.tail=FALSE)
-  newline = c(currgene,matchgene,(n+m),k,m,m.relaxed,ifelse(q>0,q+1,q),(q.relaxed+1),p,p.relaxed,k.down,(q.down+1),length(intersect(relaxedwinners,downstreambound)),p.down)
+  newline = c(currgene,matchgene,(n+m),k,m,m.relaxed,ifelse(q>0,q+1,q),
+              (q.relaxed+1),p,p.relaxed,k.down,(q.down+1),
+              length(intersect(relaxedwinners,downstreambound)),p.down)
   bindingmatrix = rbind(bindingmatrix,newline)
   listspot = match(currgene,names(master[[2]]))
   j = c((listspot*2-1),(listspot*2))
   currps = master[[1]][commonind,c(2,i)]
   bindind = match(boundgenes,currps[,1])
+  downind = match(downstreambound,currps[,1])
+  ssize = min(length(downind),(length(commonind) - length(downind)))
+  boundps[[i-3]] = -log10(currps[sample(downind,ssize),2])
+  sampleps[[i-3]] = -log10(currps[sample(c(1:dim(currps)[1])[-downind],ssize),2])
+  top = max(max(boundps[[i-3]],sampleps[[i-3]]))
   dense = density(currps[,2])
   plot(dense,lwd=3,main=paste0(matchgene," P-values"),xlab="P-value")
   legend("topright",legend=c("FDR 0.05","FDR 0.20"),fill=c("black","dodgerblue2"))
   abline(v=max(currps[which(currmaster[,2] <= de_threshold),2]),lty=2,lwd=2)
   abline(v=max(currps[which(currmaster[,2] <= relaxed_threshold),2]),lty=2,lwd=2,col="dodgerblue2")
-  bindinglist[[j[1]]] = abs(master[[3]][bindind,i])
-  bindinglist[[j[1]]] = bindinglist[[j[1]]][bindinglist[[j[1]]] != 5]
-  bindinglist[[j[2]]] = abs(master[[3]][-bindind,i])
-  bindinglist[[j[2]]] = bindinglist[[j[2]]][bindinglist[[j[2]]] != 5]
-  signifier = "-"
-  if(length(bindind) != 0){
-    signifier = ifelse(t.test(bindinglist[[j[1]]],bindinglist[[j[2]]])$p.value < 0.05,"*","-")
-  }
-  names(bindinglist)[j] = signifier
+  plot(sort(-log10(ppoints(ssize))),sort(boundps[[i-3]]),
+       main=paste0(matchgene," QQ Plot"),pch=20,col="indianred",ylim=c(0,top),
+       xlab="Expected -log10(P-value)",ylab="Observed -log10(P-value)")
+  legend("topleft",c("Bound Genes","Unbound Genes"),fill=c("indianred","black"))
+  abline(a=0,b=1,lwd=2,lty="dashed",col="dodgerblue2")
+  points(sort(-log10(ppoints(ssize))),sort(sampleps[[i-3]]),pch=20)
+  points(sort(-log10(ppoints(ssize))),sort(boundps[[i-3]]),pch=20,col="indianred")
+#  bindinglist[[j[1]]] = abs(master[[3]][bindind,i])
+#  bindinglist[[j[1]]] = bindinglist[[j[1]]][bindinglist[[j[1]]] != 5]
+#  bindinglist[[j[2]]] = abs(master[[3]][-bindind,i])
+#  bindinglist[[j[2]]] = bindinglist[[j[2]]][bindinglist[[j[2]]] != 5]
+#  signifier = "-"
+#  if(length(bindind) != 0){
+#    signifier = ifelse(t.test(bindinglist[[j[1]]],bindinglist[[j[2]]])$p.value < 0.05,"*","-")
+#  }
+#  names(bindinglist)[j] = signifier
 }
+#bindps = unlist(boundps)
+#simpleps = unlist(sampleps)
+#top = max(max(bindps),max(simpleps))
+#plot(sort(-log10(ppoints(length(bindps)))),sort(bindps),main="Master QQ Plot",
+#     pch=20,col="indianred",ylim=c(0,top))
+#legend("topleft",c("Bound Genes","Unbound Genes"),fill=c("indianred","black"))
+#abline(a=0,b=1,lwd=2,lty="dashed",col="dodgerblue2")
+#points(sort(-log10(ppoints(length(bindps)))),sort(simpleps),pch=20)
+#points(sort(-log10(ppoints(length(bindps)))),sort(bindps),pch=20,col="indianred")
+
 bindingmatrix = bindingmatrix[-1,]
 percs = cbind(as.numeric(bindingmatrix[,4])/as.numeric(bindingmatrix[,3]),
               as.numeric(bindingmatrix[,7])/as.numeric(bindingmatrix[,4]),
@@ -175,15 +225,16 @@ par(mfrow=c(2,1))
 par(mar=c(8, 8, 2, 4) + 0.1)
 par(mgp=c(3,1.5,0))
 boxplot(percs[,4:6],ylim=c(0,1),notch=T,col=c("indianred","dodgerblue2","mediumseagreen"),
-        outpch=20,outcol=c("indianred","dodgerblue2","mediumseagreen"),ylab="Fraction",
-        cex.lab=2,las=1,names=c("Bound Genes\nAll Genes","DE Genes (FDR 0.05)\nBound Genes","DE Genes (FDR 0.20)\nBound Genes"))
+        outpch=20,outcol=c("indianred","dodgerblue2","mediumseagreen"),
+        ylab="Fraction",cex.lab=2,las=1,cex=2,boxlwd=3,medlwd=4,
+        names=c("Bound Genes\nAll Genes","DE Genes (FDR 0.05)\nBound Genes","DE Genes (FDR 0.20)\nBound Genes"))
 abline(v=1.5,lty="dashed")
 #mtext(adj=0.5,side=1,text=c("Bound Genes\nAll Genes","DE Genes (FDR 0.05)\nBound Genes","DE Genes (FDR 0.20)\nBound Genes"),at=1:3)
 
 write.table(bindingmatrix,paste0(outbin,outtables,"overlaptable.txt"),row.names=F,quote=F,sep="\t")
 
 uwins = unique(unlist(winnertfs))
-kds = names(winnertfs)[4:length(winnertfs)]
+kds = names(winnertfs)[1:length(winnertfs)]
 tfmatrix = matrix(0,length(uwins),length(kds))
 colnames(tfmatrix) = kds
 rownames(tfmatrix) = uwins
@@ -223,8 +274,11 @@ commoners = intersect(master[[2]][,2],rownames(resultsmatrix))
 masterind = match(commoners,master[[2]][,2])
 comaster = master[[2]][masterind,]
 
-causalmatrix = matrix(NA,1830,10)
-colnames(causalmatrix) = c("Gene1","Gene2","CommonTFs","DisparateTFs","CommonDE","DisparateDE","CommonFET","DisparateFET","LeftFET","RightFET")
+#causalmatrix = matrix(NA,1830,10)
+causalmatrix = matrix(NA,1711,12)
+colnames(causalmatrix) = c("Gene1","Gene2","CommonTFsNOB","DisparateTFsNOB",
+                           "CommonTFs","DisparateTFs","CommonDE","DisparateDE",
+                           "CommonFET","DisparateFET","LeftFET","RightFET")
 z=1
 for(i in 1:(length(winnertfs)-1)){
   for(j in (i+1):length(winnertfs)){
@@ -236,16 +290,22 @@ for(i in 1:(length(winnertfs)-1)){
     commonexpr = comaster[which(comaster[,de1] < 5 & comaster[,de2] < 5),2]
     deind = match(commonexpr,comaster[,2])
     resultsind = match(commonexpr,rownames(resultsmatrix))
-    commaster = comaster[deind,]
-    comresults = resultsmatrix[resultsind,]
+    #commaster = comaster[deind,]
+    #comresults = resultsmatrix[resultsind,]
+    commaster = comaster
+    comresults = resultsmatrix
     tfs1 = winnertfs[[i]]
     tfs1 = intersect(tfs1,colnames(comresults))
     tfs2 = winnertfs[[j]]
     tfs2 = intersect(tfs2,colnames(comresults))
+    alltfs1 = winnernobbers[[i]]
+    alltfs2 = winnernobbers[[j]]
     commons = intersect(tfs1,tfs2)
-    newline[3] = length(commons)
+    newline[3] = length(intersect(alltfs1,alltfs2))
+    newline[4] = length(c(setdiff(alltfs1,alltfs2),setdiff(alltfs2,alltfs1)))
+    newline[5] = length(commons)
     differs = c(setdiff(tfs1,tfs2),setdiff(tfs2,tfs1))
-    newline[4] = length(differs)
+    newline[6] = length(differs)
     diffs1 = setdiff(tfs1,tfs2)
     diffs2 = setdiff(tfs2,tfs1)
     commonbind = c()
@@ -263,9 +323,9 @@ for(i in 1:(length(winnertfs)-1)){
     winners1 = which(commaster[,de1] < 0.05)
     winners2 = which(commaster[,de2] < 0.05)
     cowinners = intersect(winners1,winners2)
-    newline[5] = length(cowinners)
+    newline[7] = length(cowinners)
     colosers = c(setdiff(winners1,winners2),setdiff(winners2,winners1))
-    newline[6] = length(colosers)
+    newline[8] = length(colosers)
     losers1 = setdiff(winners1,winners2)
     losers2 = setdiff(winners2,winners1)
     commonbound = rowSums(as.matrix(comresults[,commonbind]))
@@ -280,59 +340,229 @@ for(i in 1:(length(winnertfs)-1)){
     diffbound = rowSums(as.matrix(comresults[,c(bind1,bind2)]))
     diffbound = diffbound>0
     diffbound = diffbound + 0
-    qol = ifelse(sum(commonbound[cowinners]) > 0,sum(commonbound[cowinners]) - 1,0)
-    mol = sum(commonbound)
+    qol = ifelse(is.na(sum(commonbound[cowinners])),0,ifelse(sum(commonbound[cowinners]) > 0,sum(commonbound[cowinners]) - 1,0))
+    mol = ifelse(is.na(sum(commonbound)),0,sum(commonbound))
     nol = length(commonbound) - mol
     kol = length(cowinners)
-    newline[7] = phyper(qol,mol,nol,kol, lower.tail=FALSE)
+    newline[9] = ifelse(phyper(qol,mol,nol,kol, lower.tail=FALSE)==0,1,phyper(qol,mol,nol,kol, lower.tail=FALSE))
     qdiff = ifelse(sum(diffbound[colosers]) > 0,sum(diffbound[colosers]) - 1,0)
     mdiff = sum(diffbound)
     ndiff = length(diffbound) - mdiff
     kdiff = length(colosers)
-    newline[8] = phyper(qdiff,mdiff,ndiff,kdiff, lower.tail=FALSE)
+    newline[10] = phyper(qdiff,mdiff,ndiff,kdiff, lower.tail=FALSE)
     q1 = ifelse(sum(bound1[losers1]) > 0,sum(bound1[losers1]) - 1,0)
     m1 = sum(bound1)
     n1 = length(bound1) - m1
     k1 = length(losers1)
-    newline[9] = phyper(q1,m1,n1,k1, lower.tail=FALSE)
+    newline[11] = phyper(q1,m1,n1,k1, lower.tail=FALSE)
     q2 = ifelse(sum(bound2[losers2]) > 0,sum(bound2[losers2]) - 1,0)
     m2 = sum(bound2)
     n2 = length(bound2) - m2
     k2 = length(losers2)
-    newline[10] = phyper(q2,m2,n2,k2, lower.tail=FALSE)
+    newline[12] = phyper(q2,m2,n2,k2, lower.tail=FALSE)
     causalmatrix[z,] = newline
     z = z+1
   }
 }
-tfperccomm = as.numeric(causalmatrix[,3])/(as.numeric(causalmatrix[,3])+as.numeric(causalmatrix[,4]))
-deperccomm = as.numeric(causalmatrix[,5])/(as.numeric(causalmatrix[,5])+as.numeric(causalmatrix[,6]))
+tfperccomm = as.numeric(causalmatrix[,5])/(as.numeric(causalmatrix[,5])+as.numeric(causalmatrix[,6]))
+alltfperccomm = as.numeric(causalmatrix[,3])/(as.numeric(causalmatrix[,3])+as.numeric(causalmatrix[,4]))
+deperccomm = as.numeric(causalmatrix[,7])/(as.numeric(causalmatrix[,7])+as.numeric(causalmatrix[,8]))
 liner = lm(deperccomm ~ tfperccomm)
-tfing = as.numeric(causalmatrix[,3])
+allliner = lm(deperccomm ~ alltfperccomm)
+tfing = as.numeric(causalmatrix[,5])
 tfing[which(tfing > 9)] = 10
 ys = c()
 yi = c()
 meds = c()
 xs = c(1:10,10:1)
 for(i in 1:10){
-  ys[i] = quantile(-log10(as.numeric(causalmatrix[tfing == i,7])),probs=0.75)
-  yi[i] = quantile(-log10(as.numeric(causalmatrix[tfing == i,7])),probs=0.25)
-  meds[i] = median(-log10(as.numeric(causalmatrix[tfing == i,7])))
+  ys[i] = quantile(-log10(as.numeric(causalmatrix[tfing == i,9])),probs=0.75)
+  yi[i] = quantile(-log10(as.numeric(causalmatrix[tfing == i,9])),probs=0.25)
+  meds[i] = median(-log10(as.numeric(causalmatrix[tfing == i,9])))
 }
 ys = c(ys,yi[10:1])
 weirdspots = which(tfperccomm>0.2 & deperccomm<0.15)
 
 pdf(paste0(outbin,olapplots),width=10,height=6)
 par(mar=c(5,5,2,2)+0.1)
-plot(dtfs[,2],dtfs[,1],las=1,cex.lab=2,cex=3,xlab="Differentially Expressed Transcription Factors",ylab="Differentially Expressed Genes",pch=20,col="dodgerblue2")
+plot(dtfs[,2],dtfs[,1],las=1,cex.lab=2,cex=3,
+     xlab="Differentially Expressed Transcription Factors",
+     ylab="Differentially Expressed Genes",pch=20,col="dodgerblue2")
 abline(lm(dtfs[,1] ~ dtfs[,2]),lwd=4,lty="dashed")
-text(5,3500,paste("R^2 = ",round(cor(dtfs[,2],dtfs[,1],use="pairwise.complete.obs")^2,2)))
-plot(tfperccomm,deperccomm,pch=20,cex.lab=2,las=1,xlab="Fraction of DE TFs in Common",ylab="Fraction of DE Genes in Common")
-abline(liner,col="indianred",lwd=4)
-text(0.05,0.35,paste("R^2 = ",round(cor(tfperccomm,deperccomm,use="pairwise.complete.obs")^2,2)))
+points(dtfs[,2],dtfs[,1],cex=3,pch=20,col="dodgerblue2")
+#points(dtfs[,2],dtfs[,1],cex=3,pch=21,col="gray",bg="dodgerblue2")
+text(10,3500,paste("R^2 = ",round(cor(dtfs[,2],dtfs[,1],
+                                      use="pairwise.complete.obs")^2,2)),cex=2)
+plot(dtfs[,3],dtfs[,1],las=1,cex.lab=2,cex=3,main="NoBindingTFs Incl.",
+     xlab="Differentially Expressed Transcription Factors",
+     ylab="Differentially Expressed Genes",pch=20,col="dodgerblue2")
+abline(lm(dtfs[,1] ~ dtfs[,3]),lwd=4,lty="dashed")
+points(dtfs[,3],dtfs[,1],cex=3,pch=20,col="dodgerblue2")
+#points(dtfs[,3],dtfs[,1],cex=2,pch=21,col="gray",bg="dodgerblue2")
+text(40,3500,paste0("R^2 = ",round(cor(dtfs[,3],dtfs[,1],
+                                      use="pairwise.complete.obs")^2,3)),cex=2)
+
+plot(tfperccomm,deperccomm,pch=20,cex.lab=2,las=1,
+     xlab="Fraction of TFs DE in Common",
+     ylab="Fraction of Genes DE in Common",col="indianred")
+abline(liner,lwd=4,lty="dashed")
+text(0.1,0.3,
+     paste0("R^2 = ",round(cor(tfperccomm,deperccomm,use="pairwise.complete.obs")^2,2)),
+     cex=2)
+plot(alltfperccomm,deperccomm,pch=20,cex.lab=2,las=1,main="NoBindingTFs Incl.",
+     xlab="Fraction of TFs DE in Common",
+     ylab="Fraction of Genes DE in Common",col="indianred")
+abline(allliner,lwd=4,lty="dashed")
+text(0.05,0.3,
+     paste0("R^2 = ",round(cor(alltfperccomm,deperccomm,use="pairwise.complete.obs")^2,2)),
+     cex=2)
 
 plot(1:10,1:10,type="n",ylim=c(min(ys),max(ys)),las=1,cex.lab=2,xaxt="n",
      xlab = "No. DE TFs in Common",ylab = "Degree of Binding")
 axis(side=1,at=1:10,labels=c(1:9,"10+"))
 polygon(xs,ys,col="mediumseagreen",border="mediumseagreen")
 lines(meds,type="b",lwd=3)
+
+inder = rep(10,length(alltfperccomm[causalmatrix[,3] != 0]))
+reorg = order(alltfperccomm[causalmatrix[,3] != 0])
+inder[1:(round(length(alltfperccomm[causalmatrix[,3] != 0])/10,0)*9)] = rep(c(1:9),
+                                                                            each=round(length(alltfperccomm[causalmatrix[,3] != 0])/10,0))
+boxer = cbind(as.factor(inder),
+              -log10(as.numeric(causalmatrix[causalmatrix[,3] != 0,9][reorg])))
+boxplot(boxer[,2] ~ boxer[,1],notch=T,outline=F,las=1,cex=2,
+        xlab="Fraction Common TFs Decile",ylab="Common Binding Score",cex.lab=2,
+        col="mediumseagreen",boxlwd=3,medlwd=4)
+#abline(h=median(boxer[1:109,2]),lwd=2)
+#boxplot(boxer[,2] ~ boxer[,1],las=1,notch=T,outline=F,col="mediumseagreen",add=T,
+#        boxlwd=3,medlwd=4)
+
+permer = c()
+for(i in 4:dim(master[[2]])[2]){
+  permer[i-3] = length(which(master[[2]][,i] < 5))
+}
+perms = cbind(permer,dtfs)
+
+#perming = list()
+# rperming = c()
+# for(t in 1:10000){
+#   if(t%%500 == 0){print(t)}
+#   holder = matrix(NA,1711,2)
+#   s=1
+#   for(i in 1:(dim(perms)[1]-1)){
+#     for(j in (i+1):dim(perms)[1]){
+#       deperms1 = sample(perms[i,1],perms[i,2])
+#       deperms2 = sample(perms[j,1],perms[j,2])
+#       tfs1 = deperms1[sample(perms[i,2],perms[i,4])]
+#       tfs2 = deperms2[sample(perms[j,2],perms[j,4])]
+#       holder[s,1] = length(intersect(deperms1,deperms2))/length(union(deperms1,deperms2))
+#       holder[s,2] = length(intersect(tfs1,tfs2))/length(union(tfs1,tfs2))
+#       s = s+1
+#     }
+#   }
+# #  perming[[t]] = lm(holder[,1]~holder[,2])
+#   rperming[t] = cor(holder[,1],holder[,2])
+# }
+# hist(rperming)
+
+#plot(tfperccomm[!is.na(causalmatrix[,9])],-log10(as.numeric(causalmatrix[!is.na(causalmatrix[,9]),9])),pch=20)
+#plot(causalmatrix[!is.na(causalmatrix[,9]),5],-log10(as.numeric(causalmatrix[!is.na(causalmatrix[,9]),9])),pch=20)
+
+commoners = list()
+for(i in 4:dim(master[[2]])[2]){
+  commoners[[i-3]] = intersect(unique(master[[2]][which(master[[2]][,i]< 5),2]),rownames(resultsmatrix))
+}
+
+winning = unique(c(factors[,3],nobbers[,2]))
+
+rounds = 1000
+rpermingtf = matrix(NA,1711,rounds)
+rpermingde = matrix(NA,1711,rounds)
+#for(t in 1:100){
+for(t in 1:rounds){
+  if(t%%100 == 0){print(t)}
+  holder = matrix(NA,1711,2)
+  s=1
+  for(i in 1:(dim(perms)[1]-1)){
+    for(j in (i+1):dim(perms)[1]){
+      deperms1 = sample(commoners[[i]],perms[i,2])
+      deperms2 = sample(commoners[[j]],perms[j,2])
+      tfs1 = intersect(deperms1,winning)
+      tfs2 = intersect(deperms2,winning)
+      holder[s,1] = length(intersect(deperms1,deperms2))/length(union(deperms1,deperms2))
+      holder[s,2] = length(intersect(tfs1,tfs2))/length(union(tfs1,tfs2))
+      if(length(union(tfs1,tfs2)) == 0){
+        holder[s,2] = 0
+      }
+      s = s+1
+    }
+  }
+  rpermingtf[,t] = holder[,2]
+  rpermingde[,t] = holder[,1]
+}
+
+meanerstf = apply(rpermingtf,1,mean)
+sderstf = apply(rpermingtf,1,sd)
+differstf = abs(rpermingtf - meanerstf)
+compartf = differstf - abs(alltfperccomm - meanerstf)
+tfps = rowSums(compartf > 0)/dim(rpermingtf)[2]
+tfts = (alltfperccomm - meanerstf)/ifelse(sderstf > 0,sderstf,1)
+tfpermts = apply(rpermingtf,2,function(x){(x - meanerstf)/ifelse(sderstf > 0,sderstf,1)})
+tfpermsorts = apply(tfpermts,2,sort)
+conferlowtfts = apply(tfpermsorts,1,function(x){quantile(x,0.05)})
+conferhitfts = apply(tfpermsorts,1,function(x){quantile(x,0.95)})
+nullts = qt(ppoints(length(alltfperccomm)),df=length(alltfperccomm)-2)
+plot(sort(nullts),sort(tfts),main="All TFs",xlab="Expected",ylab="Observed",
+     pch=20,las=1,cex.lab=2,type="n")
+polygon(c(sort(nullts),sort(nullts,decreasing=T)),c(sort(conferlowtfts),sort(conferhitfts,decreasing=T)),col="gray",border="gray")
+abline(a=0,b=1,lwd=2,col="dodgerblue2",lty="dashed")
+points(sort(nullts),sort(tfts),col="indianred",pch=20)
+
+#for(i in 1:dim(rpermingtf)[1]){
+#  for(j in 1:dim(rpermingtf)[2]){
+#    if(is.na(rpermingtf[i,j])){
+#      rpermingtf[i,j] = 0
+#    }
+#  }
+#}
+
+meanersde = apply(rpermingde,1,mean)
+sdersde = apply(rpermingde,1,sd)
+differsde = abs(rpermingde - meanersde)
+comparde = differsde - abs(deperccomm - meanersde)
+deps = rowSums(comparde > 0)/dim(rpermingde)[2]
+dets = (deperccomm - meanersde)/sdersde
+depermts = apply(rpermingde,2,function(x){(x - meanersde)/ifelse(sdersde > 0,sdersde,1)})
+depermsorts = apply(depermts,2,sort)
+conferlowdets = apply(depermsorts,1,function(x){quantile(x,0.05)})
+conferhidets = apply(depermsorts,1,function(x){quantile(x,0.95)})
+nulldets = qt(ppoints(length(deperccomm)),df=length(deperccomm)-2)
+plot(sort(nulldets),sort(dets),xlim=c(min(nulldets,conferlowdets),max(nulldets,conferhidets)),
+     ylim=c(min(dets,conferlowdets),max(dets,conferhidets)),main="All DE",xlab="Expected",ylab="Observed",
+     pch=20,las=1,cex.lab=2,type="n")
+polygon(c(sort(nulldets),sort(nulldets,decreasing=T)),c(sort(conferlowdets),sort(conferhidets,decreasing=T)),col="gray",border="gray")
+abline(a=0,b=1,lwd=2,col="dodgerblue2",lty="dashed")
+points(sort(nulldets),sort(dets),col="indianred",pch=20)
+
+medstf = apply(rpermingtf,2,median)
+diffingtf = abs(medstf - mean(medstf))
+comparatf = diffingtf - abs(median(alltfperccomm) - mean(medstf))
+tfp = length(which(comparatf > 0))/dim(rpermingtf)[2]
+
+medsde = apply(rpermingde,2,median)
+diffingde = abs(medsde - mean(medsde))
+comparade = diffingde - abs(median(deperccomm) - mean(medsde))
+dep = length(which(comparade > 0))/dim(rpermingde)[2]
+
+bottom = min(median(alltfperccomm),median(deperccomm),medsde,medstf)
+top = max(median(alltfperccomm),median(deperccomm),medsde,medstf)
+par(mfrow=c(1,1))
+par(mar=c(2, 8, 2, 6) + 0.1)
+par(mgp=c(4,1,0))
+boxplot(medstf,medsde,ylim=c(bottom,top),names=c("All TFs","All DE"),notch=T,
+        outline=F,las=1,cex=2,ylab="Median Degree Sharing",cex.lab=2,
+        col="dodgerblue2",boxlwd=3,medlwd=4)
+points(c(1,2),c(median(alltfperccomm),median(deperccomm)),pch=8,cex=3,lwd=3,
+       col="indianred")
+
+
 dev.off()

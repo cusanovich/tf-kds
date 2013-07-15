@@ -4,13 +4,14 @@ library('topGO')
 library('gplots')
 Args <- commandArgs(TRUE)
 #Args = c("EP300","expr_secondbatch_a3ruv2k8")
-#Args =c("HCST","expr_firstbatch_ruv2")
+#Args = c("HCST","expr_firstbatch_ruv2")
 print(Args[1])
 print(Args[2])
-resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/Update_RUV2_NSAveraged_Results/"
+resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
 
 print('Loading expression file...')
 expr = as.matrix(read.table(paste("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Exprs/",Args[2],".txt",sep="")))
+#expr = as.matrix(read.table(paste("~/home/Kd_Arrays/Analysis/Exprs/",Args[2],".txt",sep="")))
 
 
 print('Loading NS arrays...')
@@ -20,6 +21,8 @@ batches = batches[-match(currbatch,batches)]
 nsa = expr[,grep("NS",colnames(expr))]
 nsb = as.matrix(read.table(paste("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Exprs/",gsub(currbatch,batches[1],Args[2]),".txt",sep="")))
 nsc = as.matrix(read.table(paste("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Exprs/",gsub(currbatch,batches[2],Args[2]),".txt",sep="")))
+#nsb = as.matrix(read.table(paste("~/home/Kd_Arrays/Analysis/Exprs/",gsub(currbatch,batches[1],Args[2]),".txt",sep="")))
+#nsc = as.matrix(read.table(paste("~/home/Kd_Arrays/Analysis/Exprs/",gsub(currbatch,batches[2],Args[2]),".txt",sep="")))
 nsb = nsb[,grep("NS",colnames(nsb))]
 nsc = nsc[,grep("NS",colnames(nsc))]
 nsclass = list("NS1","NS2","NS3","NS4",c("NS_P1","NS_P3"),c("NS_P2","NS_P6"))
@@ -50,6 +53,8 @@ colnames(ns_expr) = c("NS1","NS2","NS3","NS4","NS_P1","NS_P2")
 
 print('Loading detection file...')
 detection = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Exprs/Detection_Scores_All3.txt")
+#detection = read.table("~/home/Kd_Arrays/Analysis/Exprs/Detection_Scores_All3.txt")
+
 
 print('Cleaning up a bit...')
 nsout.ind = grep("NS",colnames(expr))
@@ -70,13 +75,14 @@ detgood = union(det.ns,det.tf)
 svatable = svastable[detgood,]
 probing = droplevels(probings[detgood])
 
-probereport = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_NoGM19238SNPs_NoChrY_Stranded_OneProbePerGene.txt",header=T)
+probereport = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_NoGM19238SNPs_NoChrY_Stranded_OneProbePerGene_alt.txt",header=T)
+#probereport = read.table("~/home/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_NoGM19238SNPs_NoChrY_Stranded_OneProbePerGene_alt.txt",header=T)
 probereport.ind = match(probing,probereport[,4])
 probereportupdate = probereport[probereport.ind,]
 probereportupdate = probereportupdate[!is.na(probereport.ind),]
 genes = probereportupdate[,7:8]
 probes.ind = match(probereportupdate[,4],probing)
-probing = probing[probes.ind]
+probing = droplevels(probing[probes.ind])
 
 expr_batch = svatable[probes.ind,]
 
@@ -107,17 +113,17 @@ rm(temp)
 dim(tftable)
 
 print('Running models...')
-lnmodels <- dlply(tftable, "V1", function(lmfit) lm(lmfit$V2 ~ lmfit$V3))
-lnresults <- ldply(lnmodels, logLik)
+lnmodels = dlply(tftable, "V1", function(lmfit) lm(lmfit$V2 ~ lmfit$V3))
+lnresults = ldply(lnmodels, logLik)
 rm(lnmodels)
-nullmodels <- dlply(tftable, "V1", function(lmfit) lm(lmfit$V2 ~ 1))
-nullresults <- ldply(nullmodels, logLik)
+nullmodels = dlply(tftable, "V1", function(lmfit) lm(lmfit$V2 ~ 1))
+nullresults = ldply(nullmodels, logLik)
 rm(nullmodels)
-probeorder <- levels(probing)
+probeorder = levels(probing)
 probe.ind = match(probeorder,probing)
 
 print('Calculating P-values...')
-lrt <- 2*(lnresults[,1]-nullresults[,1])
+lrt = 2*(lnresults[,1]-nullresults[,1])
 plrt = pchisq(lrt,df=1,lower.tail=FALSE)
 qlrt = qvalue(plrt)$qvalues
 fivepercers = which(qlrt <= 0.05)
@@ -258,7 +264,7 @@ p.ind = order(plrt)
 results = cbind(data.frame(plrt[p.ind]),qlrt[p.ind])
 results = cbind(results,m[p.ind])
 results = cbind(results,probeorder[p.ind])
-results = cbind(results,genes[p.ind,])
+results = cbind(results,genes[probe.ind[p.ind],])
 names(results) = c("Pvalue","Qvalue","Log2FC","ProbeID","ENSGID","Symbol")
 write.table(results,paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],
                           "_Pvalues.txt",sep=""))
