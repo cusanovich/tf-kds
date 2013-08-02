@@ -1,11 +1,9 @@
-resultsmatrix = as.matrix(read.table("../allbindingresults10kb.txt",sep="\t"))
-#resultsmatrix = as.matrix(read.table("./kBeds/resultsmatrix10kb_allBcell_0.990.txt",sep="\t"))
-
+windowsize = "1kb"
+resultsmatrix = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allbindingresults",windowsize,".txt"),sep="\t"))
 resultsmatrix = resultsmatrix[which(rowSums(resultsmatrix) > 0),]
 resultsmatrix = resultsmatrix[,which(colSums(resultsmatrix) > 0)]
 resultsbinary = resultsmatrix>0
 resultsbinary = resultsbinary + 0
-#resultsbinary = resultsmatrix
 
 binary.phi = matrix(1,dim(resultsbinary)[2],dim(resultsbinary)[2])
 for(i in 1:(dim(resultsbinary)[2])-1){
@@ -25,4 +23,4 @@ for(i in 1:(dim(resultsbinary)[2])-1){
 colnames(binary.phi) = colnames(resultsmatrix)
 rownames(binary.phi) = colnames(resultsmatrix)
 
-write.table(binary.phi,"../PhiTables/AllFactorBinding10kbPhis.txt")
+write.table(binary.phi,paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/PhiTables/AllFactorBinding",windowsize,"Phis.txt"))

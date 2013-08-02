@@ -11,6 +11,8 @@ resultsmatrix = open(sys.argv[2],'w')
 
 pwmlist = {}
 for line in pwms:
+    if '#' in line:
+        continue
     if line.strip().split()[0] in pwmlist.keys():
         pwmlist[line.strip().split()[0]].append(line.strip().split()[1])
     if line.strip().split()[0] not in pwmlist.keys():

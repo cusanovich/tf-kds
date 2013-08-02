@@ -1,10 +1,12 @@
 library('plyr')
 library('stringr')
-resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_Results/"
+windowsize="10kb"
+resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
 outdir = "/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/"
+grepbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/"
 de_threshold = 0.05
 factors = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt")
-resultsmatrix = as.matrix(read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/allbindingresults10kb.txt",sep="\t"))
+resultsmatrix = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allbindingresults",windowsize,".txt"),sep="\t"))
 resultsmatrix = resultsmatrix[which(rowSums(resultsmatrix) > 0),]
 resultsmatrix = resultsmatrix[,which(colSums(resultsmatrix) > 0)]
 resultsbinary = resultsmatrix>0
@@ -91,20 +93,24 @@ for(i in 4:dim(master[[2]])[2]){
   bound.de[[length(bound.de)+1]] = resultsmatrix[match(winnerbound,rownames(resultsmatrix)),matrixcol]
   bound[[length(bound)+1]] = resultsmatrix[match(justbound,rownames(resultsmatrix)),matrixcol]
   bound.bound[[length(bound.bound)+1]] = resultsmatrix[match(justbound,rownames(resultsmatrix)),matrixcol]
-  write.table(paste(winnerbound,collapse="|"),paste("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/",currgene,".DEandBound.txt",sep=""),
-              row.names=F,col.names=F,quote=F)
-  write.table(paste(justbound,collapse="|"),paste("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/",currgene,".Bound.txt",sep=""),
-              row.names=F,col.names=F,quote=F)
-  write.table(paste(downwinnerbound,collapse="|"),paste("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/",currgene,".DEandBoundPlus.txt",sep=""),
-              row.names=F,col.names=F,quote=F)
-  write.table(paste(justdownbound,collapse="|"),paste("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/",currgene,".BoundPlus.txt",sep=""),
-              row.names=F,col.names=F,quote=F)
+  write.table(paste(winnerbound,collapse="|"),
+              paste0(grepbin,windowsize,"/",currgene,".DEandBound.txt"),row.names=F,
+              col.names=F,quote=F)
+  write.table(paste(justbound,collapse="|"),
+              paste0(grepbin,windowsize,"/",currgene,".Bound.txt"),row.names=F,col.names=F,
+              quote=F)
+  write.table(paste(downwinnerbound,collapse="|"),
+              paste0(grepbin,windowsize,"/",currgene,".DEandBoundPlus.txt"),row.names=F,
+              col.names=F,quote=F)
+  write.table(paste(justdownbound,collapse="|"),
+              paste0(grepbin,windowsize,"/",currgene,".BoundPlus.txt"),row.names=F,
+              col.names=F,quote=F)
   write.table(paste(colnames(resultsmatrix)[matrixcol],collapse="|"),
-              paste("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/",currgene,".BindingTF.txt",sep=""),
-              row.names=F,col.names=F,quote=F)
+              paste0(grepbin,windowsize,"/",currgene,".BindingTF.txt"),row.names=F,
+              col.names=F,quote=F)
   write.table(paste(colnames(resultsmatrix)[downstreamcol],collapse="|"),
-              paste("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/",currgene,".DownstreamTFs.txt",sep=""),
-              row.names=F,col.names=F,quote=F)
+              paste0(grepbin,windowsize,"/",currgene,".DownstreamTFs.txt"),row.names=F,
+              col.names=F,quote=F)
   if(length(boundgenes) < 1){
     bound.t = c(bound.t,NA)
     next
@@ -120,14 +126,6 @@ for(i in 4:dim(master[[2]])[2]){
     down.bound[[length(down.bound)+1]] = resultsmatrix[match(justdownbound,rownames(resultsmatrix)),downstreamcol]
     binary.bound[[length(binary.bound)+1]] = resultsbinary[match(justdownbound,rownames(resultsbinary)),downstreamcol]
     down.t = c(down.t,t.test(down[[length(down)-1]],down[[length(down)]])$statistic)
-#    write.table(paste(winnerbound,collapse="|"),paste("../../GenomeAnnotations/Grepers/",currgene,".DEandBound.txt",sep=""),
-#                row.names=F,col.names=F,quote=F)
-#    write.table(paste(justbound,collapse="|"),paste("../../GenomeAnnotations/Grepers/",currgene,".Bound.txt",sep=""),
-#                row.names=F,col.names=F,quote=F)
-#    write.table(paste(downwinnerbound,collapse="|"),paste("../../GenomeAnnotations/Grepers/",currgene,".DEandBoundPlus.txt",sep=""),
-#                row.names=F,col.names=F,quote=F)
-#    write.table(paste(justdownbound,collapse="|"),paste("../../GenomeAnnotations/Grepers/",currgene,".BoundPlus.txt",sep=""),
-#                row.names=F,col.names=F,quote=F)
     next
   }
   down[[length(down)+1]] = rowSums(resultsmatrix[match(downwinnerbound,rownames(resultsmatrix)),downstreamcol])
@@ -145,7 +143,7 @@ u.bound = signif(wilcox.test(unlist(bound.de),unlist(bound.bound),na.rm=T)$p.val
 u.down = signif(wilcox.test(unlist(down.de),unlist(down.bound),na.rm=T)$p.value,4)
 u.binary = signif(wilcox.test(unlist(binary.de),unlist(binary.bound),na.rm=T)$p.value,4)
 
-pdf("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/NumTFsBindingDEGenes.pdf")
+pdf(paste0(outdir,windowsize,"NumTFsBindingDEGenes.pdf"))
 par(mfrow=c(2,2))
 boxplot(unlist(bound.de),unlist(bound.bound),na.rm=T,log="y",outline=F,
         col=c("indianred","dodgerblue2"),las=1,ylab="No. of Binding Events",

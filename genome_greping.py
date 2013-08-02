@@ -4,18 +4,26 @@ import sys
 import random
 import numpy
 
-grepdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/'
-outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/'
+windowsize = '10kb'
+grepdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/' + windowsize + '/'
+outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/' + windowsize + '/'
+permdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Perms/' + windowsize + '/'
 genelists = os.listdir(grepdir)
 genelist = sorted(set([x.split('.')[0] for x in genelists]))
 #genelist = ['ARNTL2_old']
 factors = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt'
-masterfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/results10kb_combined_midpoint_sorted.bed'
-centifile = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/FinalAnnots/10kbresults_phastcons_sorted_midpoint.bed'
+masterfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowsize + '_combined_midpoint_sorted.bed'
+centifile = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/FinalAnnots/' + windowsize + 'results_phastcons_sorted_midpoint.bed'
 
 def genereader(thisfile):
 	currfile = open(thisfile,'r')
 	return(currfile.readline().strip().split('|'))
+
+def pathmaker(path):
+	try:
+		os.makedirs(path)
+	except OSError:
+		print 'Warning: ' + path + ' already exists!'
 
 genecounts = {}
 for gene in genelist:
@@ -57,6 +65,12 @@ for gene in genelist:
 	currcentidowns = set(currcentidowns)
 	print 'Splitting Master Records...'
 	sys.stdout.flush()
+	pathmaker(outdir + 'GrepDistance/')
+	pathmaker(outdir + 'GrepCage/')
+	pathmaker(outdir + 'GrepChipvCenti/')
+	pathmaker(outdir + 'GrepPhastCons/')
+	pathmaker(outdir + 'GrepPWM/')
+	pathmaker(outdir + 'GrepPosterior/')
 	master = open(masterfile,'r')
 	tfcagegenes = []
 	downcagegenes = []
@@ -199,7 +213,7 @@ for gene in genelist:
 	genecounts[gene][2] = len(set(currcentigenes))
 	genecounts[gene][3] = len(set(currcentidowngenes))
 
-counting = open('/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/PermCounts.txt','w')
+counting = open(permdir + 'PermCounts.txt','w')
 for gener in sorted(genecounts.keys()):
 	print >> counting, gener + "\t" + str(genecounts[gener][0]) + "\t" + str(genecounts[gener][1]) + "\t" + str(genecounts[gener][2]) + "\t" + str(genecounts[gener][3])
 
@@ -215,7 +229,7 @@ for test in sorted(tests):
 	masterrandos = {}
 	for i in range(1000):
 		masterrandos[i] = []
-	permresults = open('/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/' + test + '.master.perms','w')
+	permresults = open(permdir + test + '.master.perms','w')
 	genes = os.listdir(outdir + test)
 	for gene in sorted(genes):
 #	for gene in ['YY1_second.down.perm.cage']:
@@ -280,7 +294,7 @@ for test in sorted(tests):
 			x += 1
 		print >> permresults, justgene + "\t" + tfscope + "\t" + "\t".join(generand)
 	permresults.close()
-	currpermresults = open('/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/' + test + '.alt.perms','w')
+	currpermresults = open(permdir + test + '.alt.perms','w')
 	for rep in range(1000):
 		if 'GrepChip' in test:
 			print >> currpermresults, str(masterrandos[rep].count('centi')/float(len(masterrandos[rep])))
