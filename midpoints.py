@@ -1,6 +1,13 @@
 #!/usr/bin/env python
-centifile = open('/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/FinalAnnots/10kbresults_phastcons_sorted.bed','r')
-outcentifile = open('/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/FinalAnnots/10kbresults_phastcons_sorted_midpoint.bed','w')
+import sys
+
+if(len(sys.argv)!= 2):
+	sys.stderr.write('Error!! Supplied ' + str(len(sys.argv)) + ' Arguments!!\nUsage: midpoints.py [Window Size]\n\n')
+	sys.exit(1)
+
+windowsize = sys.argv[1]
+centifile = open('/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/FinalAnnots/' + windowsize + 'results_phastcons_sorted.bed','r')
+outcentifile = open('/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/FinalAnnots/' + windowsize + 'results_phastcons_sorted_midpoint.bed','w')
 
 genes = []
 for line in centifile:

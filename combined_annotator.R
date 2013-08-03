@@ -1,6 +1,6 @@
 library('plyr')
 library('stringr')
-windowsize="10kb"
+windowsize="1kb"
 resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
 outdir = "/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/"
 grepbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/"
@@ -115,7 +115,11 @@ for(i in 4:dim(master[[2]])[2]){
     bound.t = c(bound.t,NA)
     next
   }
-  bound.t = c(bound.t,t.test(bound[[length(bound)-1]],bound[[length(bound)]])$statistic)
+  if(var(c(bound[[length(bound)-1]],bound[[length(bound)]])) != 0){
+    bound.t = c(bound.t,t.test(bound[[length(bound)-1]],bound[[length(bound)]])$statistic)
+  }else{
+    bound.t = c(bound.t,0)
+  }
   if(length(downstreamcol) == 1){
     down[[length(down)+1]] = resultsmatrix[match(downwinnerbound,rownames(resultsmatrix)),downstreamcol]
     binaries[[length(binaries)+1]] = resultsbinary[match(downwinnerbound,rownames(resultsbinary)),downstreamcol]
@@ -125,7 +129,11 @@ for(i in 4:dim(master[[2]])[2]){
     binaries[[length(binaries)+1]] = resultsbinary[match(justdownbound,rownames(resultsbinary)),downstreamcol]
     down.bound[[length(down.bound)+1]] = resultsmatrix[match(justdownbound,rownames(resultsmatrix)),downstreamcol]
     binary.bound[[length(binary.bound)+1]] = resultsbinary[match(justdownbound,rownames(resultsbinary)),downstreamcol]
-    down.t = c(down.t,t.test(down[[length(down)-1]],down[[length(down)]])$statistic)
+    if(var(c(down[[length(down)-1]],down[[length(down)]])) != 0){
+      down.t = c(down.t,t.test(down[[length(down)-1]],down[[length(down)]])$statistic)
+    }else{
+      down.t = c(down.t,0)
+    }
     next
   }
   down[[length(down)+1]] = rowSums(resultsmatrix[match(downwinnerbound,rownames(resultsmatrix)),downstreamcol])
@@ -136,7 +144,11 @@ for(i in 4:dim(master[[2]])[2]){
   binaries[[length(binaries)+1]] = rowSums(resultsbinary[match(justdownbound,rownames(resultsbinary)),downstreamcol])
   down.bound[[length(down.bound)+1]] = rowSums(resultsmatrix[match(justdownbound,rownames(resultsmatrix)),downstreamcol])
   binary.bound[[length(binary.bound)+1]] = rowSums(resultsbinary[match(justdownbound,rownames(resultsbinary)),downstreamcol])  
-  down.t = c(down.t,t.test(down[[length(down)-1]],down[[length(down)]])$statistic)
+  if(var(c(down[[length(down)-1]],down[[length(down)]])) != 0){
+    down.t = c(down.t,t.test(down[[length(down)-1]],down[[length(down)]])$statistic)
+  }else{
+    down.t = c(down.t,0)
+  }
 }
 
 u.bound = signif(wilcox.test(unlist(bound.de),unlist(bound.bound),na.rm=T)$p.value,4)

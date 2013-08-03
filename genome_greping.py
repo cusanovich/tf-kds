@@ -4,7 +4,7 @@ import sys
 import random
 import numpy
 
-windowsize = '10kb'
+windowsize = '5kb'
 grepdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/' + windowsize + '/'
 outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/' + windowsize + '/'
 permdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Perms/' + windowsize + '/'
