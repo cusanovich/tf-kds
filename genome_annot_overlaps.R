@@ -1,37 +1,32 @@
 library('plyr')
 library('beanplot')
-grandpath = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/"
+windowsize = '10kb'
+grandpath = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/",windowsize,"/")
 masterpath = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/"
-tests = list.files("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/")
-pdf("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Annotations.pdf")
-#grandpath = "~/home/Kd_Arrays/GenomeAnnotations/GrepBeds/"
+#grandpath = paste0("~/home/Kd_Arrays/GenomeAnnotations/GrepBeds/",windowsize,"/")
 #masterpath = "~/home/Kd_Arrays/GenomeAnnotations/"
-#tests = list.files("~/home/Kd_Arrays/GenomeAnnotations/GrepBeds/")
+tests = list.files(grandpath)
+
+pdf(paste0(masterpath,windowsize,"Annotations.pdf"))
 par(mfrow=c(2,2))
 par(mar=c(4,4,6,4)+0.1)
 for(i in 1:length(tests)){
   currtest = tests[i]
   print(currtest)
   currpath = paste0(grandpath,currtest)
-  currmaster = read.table(paste0(masterpath,currtest,".master.perms"))
+  currmaster = read.table(paste0(masterpath,"Perms/",windowsize,"/",currtest,".master.perms"))
   mastermedstf = apply(currmaster[grep("TF",currmaster[,2]),3:dim(currmaster)[2]],2,median)
   mastermedsdown = apply(currmaster[grep("Downstream",currmaster[,2]),3:dim(currmaster)[2]],2,median)
-  altmastertf = read.table(paste0(masterpath,currtest,".alt.tf.perms"))
-  altmasterdown = read.table(paste0(masterpath,currtest,".alt.down.perms"))
+  altmastertf = read.table(paste0(masterpath,"Perms/",windowsize,"/",currtest,".alt.tf.perms"))
+  altmasterdown = read.table(paste0(masterpath,"Perms/",windowsize,"/",currtest,".alt.down.perms"))
   currtfboundfiles = list.files(path=currpath,pattern = ".tf.bound.")
   currtfdefiles = list.files(path=currpath,pattern = ".tf.debound.")
-  #currtfpermfiles = list.files(path=currpath,pattern = ".tf.perm.")
   currdownboundfiles = list.files(path=currpath,pattern = ".down.bound.")
   currdowndefiles = list.files(path=currpath,pattern = ".down.debound.")
-  #currdownpermfiles = list.files(path=currpath,pattern = ".down.perm.")
   currtfbounds = llply(paste(currpath,currtfboundfiles,sep="/"), read.table)
   currtfdes = llply(paste(currpath,currtfdefiles,sep="/"), read.table)
   currdownbounds = llply(paste(currpath,currdownboundfiles,sep="/"), read.table)
   currdowndes = llply(paste(currpath,currdowndefiles,sep="/"), read.table)
-  #outliers = T
-  #if(currtest == "GrepPosterior" | currtest == "GrepPWM"){
-  #  outliers = F
-  #}
   if(currtest == "GrepChipvCenti"){
     currtfbounds = llply(currtfbounds, function(x){length(which(x == "centi"))/length(x[,1])})
     currtfdes = llply(currtfdes, function(x){length(which(x == "centi"))/length(x[,1])})
@@ -50,18 +45,6 @@ for(i in 1:length(tests)){
       }
     }
   }
-#  if(currtest == "GrepCage"){
-#    currtfbounds = llply(currtfbounds, log10)
-#    currtfdes = llply(currtfdes, log10)
-#    currdownbounds = llply(currdownbounds, log10)
-#    currdowndes = llply(currdowndes, log10)
-#  }
-#  if(currtest == "GrepPosterior"){
-#    currtfbounds = llply(currtfbounds, function(x){1-x})
-#    currtfdes = llply(currtfdes, function(x){1-x})
-#    currdownbounds = llply(currdownbounds, function(x){1-x})
-#    currdowndes = llply(currdowndes, function(x){1-x})
-#  }
   if(currtest != "GrepChipvCenti"){
     tfmed = median(unlist(llply(currtfdes,function(x){median(x[,1],na.rm=T)})))
     downmed = median(unlist(llply(currdowndes,function(x){median(x[,1],na.rm=T)})))
@@ -94,7 +77,6 @@ for(i in 1:length(tests)){
     dense2 = density(unlist(currtfbounds))
     plot(range(dense1$x, dense2$x), range(dense1$y, dense2$y), type = "n", xlab = "Distance",
          ylab = "Density", main="Distance from TSS (TFs)")
-    #abline(v=0,lty="dashed",lwd=3)
     lines(dense1, col = "indianred",lwd=3)
     lines(dense2, col = "dodgerblue2",lwd=3)
     legend("topright",legend=c("DE","Bound"),fill=c("indianred","dodgerblue2"))
@@ -108,7 +90,6 @@ for(i in 1:length(tests)){
     dense2 = density(unlist(currdownbounds))
     plot(range(dense1$x, dense2$x), range(dense1$y, dense2$y), type = "n", xlab = "Distance",
          ylab = "Density", main="Distance from TSS (Downstream)")
-    #abline(v=0,lty="dashed",lwd=3)
     lines(dense1, col = "indianred",lwd=3)
     lines(dense2, col = "dodgerblue2",lwd=3)
     legend("topright",legend=c("DE","Bound"),fill=c("indianred","dodgerblue2"))
@@ -118,14 +99,14 @@ for(i in 1:length(tests)){
     lines(dense1, col = "indianred",lwd=3)
     lines(dense2, col = "dodgerblue2",lwd=3)
     legend("topright",legend=c("DE","Bound"),fill=c("indianred","dodgerblue2"))
-    #hist(unlist(currtfdes),col="indianred")
-    #hist(unlist(currtfbounds),col="dodgerblue2")
-    #hist(unlist(currdowndes),col="indianred")
-    #hist(unlist(currdownbounds),col="dodgerblue2")
     boxplot(log10(abs(unlist(currtfdes))+0.001),log10(abs(unlist(currtfbounds))+0.001),col=c("indianred","dodgerblue2"),outline=F,
-            names=c("DE","Bound"),main=paste0(currtest," TF\nP-value = ",signif(wilcox.test(abs(unlist(currtfdes)),abs(unlist(currtfbounds)),na.action = na.omit)$p.value,4),"\n",tfdir),notch=T)
+            names=c("DE","Bound"),
+            main=paste0(currtest," TF\nP-value = ",signif(wilcox.test(abs(unlist(currtfdes)),abs(unlist(currtfbounds)),na.action = na.omit)$p.value,4),"\n",tfdir),
+            notch=T)
     boxplot(log10(abs(unlist(currdowndes))+0.001),log10(abs(unlist(currdownbounds))+0.001),col=c("indianred","dodgerblue2"),outline=F,
-            names=c("DE","Bound"),main=paste0(currtest," Downstream\nP-value = ",signif(wilcox.test(abs(unlist(currdowndes)),abs(unlist(currdownbounds)),na.action = na.omit)$p.value,4),"\n",downdir),notch=T)
+            names=c("DE","Bound"),
+            main=paste0(currtest," Downstream\nP-value = ",signif(wilcox.test(abs(unlist(currdowndes)),abs(unlist(currdownbounds)),na.action = na.omit)$p.value,4),"\n",downdir),
+            notch=T)
     hist(mastermedstf,xlab="Absolute Distance to TSS",
          main=paste0(currtest," TF\nEmpirical P-value = ",tfempiricalp),
                      xlim=c(min(min(mastermedstf),tfmed),max(max(mastermedstf),tfmed)))
@@ -147,9 +128,13 @@ for(i in 1:length(tests)){
     currdownboundsb = llply(currdownbounds, function(x){length(which(x > 0))/length(x[,1])})
     currdowndesb = llply(currdowndes, function(x){length(which(x > 0))/length(x[,1])})
     boxplot(unlist(currtfdesb),unlist(currtfboundsb),col=c("indianred","dodgerblue2"),outline=F,
-            names=c("DE","Bound"),main=paste0(currtest," TF Frac(+)\nP-value = ",signif(wilcox.test(abs(unlist(currtfdesb)),abs(unlist(currtfboundsb)),na.action = na.omit)$p.value,4),"\n",tfdir),notch=T)
+            names=c("DE","Bound"),
+            main=paste0(currtest," TF Frac(+)\nP-value = ",signif(wilcox.test(abs(unlist(currtfdesb)),abs(unlist(currtfboundsb)),na.action = na.omit)$p.value,4),"\n",tfdir),
+            notch=T)
     boxplot(unlist(currdowndesb),unlist(currdownboundsb),col=c("indianred","dodgerblue2"),outline=F,
-            names=c("DE","Bound"),main=paste0(currtest," Downstream Frac(+)\nP-value = ",signif(wilcox.test(abs(unlist(currdowndesb)),abs(unlist(currdownboundsb)),na.action = na.omit)$p.value,4),"\n",downdir),notch=T)
+            names=c("DE","Bound"),
+            main=paste0(currtest," Downstream Frac(+)\nP-value = ",signif(wilcox.test(abs(unlist(currdowndesb)),abs(unlist(currdownboundsb)),na.action = na.omit)$p.value,4),"\n",downdir),
+            notch=T)
   }else{
     if(currtest == "GrepCage"){
       currtfbounds = llply(currtfbounds, function(x){log10(x+0.001)})
@@ -177,9 +162,5 @@ for(i in 1:length(tests)){
     hist(altmasterdown[,1],main=paste0(currtest," Downstream\nAlt Empirical P-value = ",altdownempiricalp),
          xlim=c(min(min(altmasterdown),downmed),max(max(altmasterdown),downmed)))
     abline(v=downmed,lwd=3,col="indianred")
-    #hist(unlist(currtfdes),col="indianred",main=paste0(currtest," TF"))
-    #hist(unlist(currtfbounds),col="dodgerblue2",main=paste0(currtest," Downstream"))
-    #hist(unlist(currdowndes),col="indianred",main=paste0(currtest," TF"))
-    #hist(unlist(currdownbounds),col="dodgerblue2",main=paste0(currtest," Downstream"))
   }
 }

@@ -4,3 +4,5 @@
 ._analysis_analyzer.sh
 ._combined_factormatrix2results.R
 ._combined_resultsbed2factormatrix.py
+._chromatin_factormatrix2results.R
+._chromatin_resultsbed2factormatrix.py

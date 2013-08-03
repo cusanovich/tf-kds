@@ -4,7 +4,7 @@ import sys
 import random
 import numpy
 
-windowsize = '5kb'
+windowsize = '1kb'
 grepdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/' + windowsize + '/'
 outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/' + windowsize + '/'
 permdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Perms/' + windowsize + '/'
@@ -26,6 +26,12 @@ def pathmaker(path):
 		print 'Warning: ' + path + ' already exists!'
 
 genecounts = {}
+pathmaker(outdir + 'GrepDistance/')
+pathmaker(outdir + 'GrepCage/')
+pathmaker(outdir + 'GrepChipvCenti/')
+pathmaker(outdir + 'GrepPhastCons/')
+pathmaker(outdir + 'GrepPWM/')
+pathmaker(outdir + 'GrepPosterior/')
 for gene in genelist:
 #for gene in ['YY1_second']:
 	print gene
@@ -65,12 +71,6 @@ for gene in genelist:
 	currcentidowns = set(currcentidowns)
 	print 'Splitting Master Records...'
 	sys.stdout.flush()
-	pathmaker(outdir + 'GrepDistance/')
-	pathmaker(outdir + 'GrepCage/')
-	pathmaker(outdir + 'GrepChipvCenti/')
-	pathmaker(outdir + 'GrepPhastCons/')
-	pathmaker(outdir + 'GrepPWM/')
-	pathmaker(outdir + 'GrepPosterior/')
 	master = open(masterfile,'r')
 	tfcagegenes = []
 	downcagegenes = []
@@ -277,27 +277,40 @@ for test in sorted(tests):
 			for rando in randogenes:
 				randos.extend(currdict[rando])
 			if 'GrepChip' in test:
-				masterrandos[g].extend(randos)
+				if '.tf.' in gene:
+					masterrandostf[g].extend(randos)
+				if '.down.' in gene:
+					masterrandosdown[g].extend(randos)
 				randy = randos.count('centi')/float(len(randos))
 				generand.append(str(randy))
 				x += 1
 				continue
 			if 'GrepDistance' in test:
 				randy = [abs(int(z)) for z in randos]
-				masterrandos[g].extend(randy)
+				if '.tf.' in gene:
+					masterrandostf[g].extend(randy)
+				if '.down.' in gene:
+					masterrandosdown[g].extend(randy)
 				generand.append(str(numpy.median(randy)))
 				x += 1
 				continue
 			randy = [float(z) for z in randos]
-			masterrandos[g].extend(randy)
+			if '.tf.' in gene:
+				masterrandostf[g].extend(randy)
+			if '.down.' in gene:
+				masterrandosdown[g].extend(randy)
 			generand.append(str(numpy.median(randy)))
 			x += 1
 		print >> permresults, justgene + "\t" + tfscope + "\t" + "\t".join(generand)
 	permresults.close()
-	currpermresults = open(permdir + test + '.alt.perms','w')
+	currpermresultstf = open(outdir + test + '.alt.tf.perms','w')
+	currpermresultsdown = open(outdir + test + '.alt.down.perms','w')
 	for rep in range(1000):
 		if 'GrepChip' in test:
-			print >> currpermresults, str(masterrandos[rep].count('centi')/float(len(masterrandos[rep])))
+			print >> currpermresultstf, str(masterrandostf[rep].count('centi')/float(len(masterrandostf[rep])))
+			print >> currpermresultsdown, str(masterrandosdown[rep].count('centi')/float(len(masterrandosdown[rep])))
 		else:
-			print >> currpermresults, str(numpy.median(masterrandos[rep]))
-	currpermresults.close()
+			print >> currpermresultstf, str(numpy.median(masterrandostf[rep]))
+			print >> currpermresultsdown, str(numpy.median(masterrandosdown[rep]))
+	currpermresultstf.close()
+	currpermresultsdown.close()

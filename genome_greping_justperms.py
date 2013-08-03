@@ -4,9 +4,10 @@ import sys
 import random
 import numpy
 
-indir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/'
-outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/'
-countfile = open('/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/PermCounts.txt','r')
+windowsize = '10kb'
+indir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/' + windowsize + '/'
+outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Perms/' + windowsize + '/'
+countfile = open('/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Perms/' + windowsize + '/' + 'PermCounts.txt','r')
 genecounts = {}
 for line in countfile:
 	liner = line.strip().split()

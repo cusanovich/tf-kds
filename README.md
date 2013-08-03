@@ -1,9 +1,9 @@
 TF Knockdown Scripts
 ====================
 
-##This repository contains all the scripts required to repeat the analysis from Cusanovich et al. 2013.
+#This repository contains all the scripts required to repeat the analysis from Cusanovich et al. 2013.
 
-##Assuming that all the appropriate annotation files have been generated, here is the order of analysis scripts:
+#Assuming that all the appropriate annotation files have been generated, here is the order of analysis scripts:
 1. analysis_allthreeruv2.R
 2. analysis_analyzer.sh (calls analysis_KdLRTRUV2_AverageNS.R)
 3. analysis_ResultsSummary.R
