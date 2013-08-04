@@ -1,14 +1,11 @@
 #!/usr/bin/env python
-import sys
 
-if(len(sys.argv)!= 3):
-	sys.stderr.write('Error!! Supplied ' + str(len(sys.argv)) + ' Arguments!!\nUsage: resultsbed2factormatrix.py [BED File] [Results Matrix File]\n\n')
-	sys.exit(1)
-
-pwms = open('../Overlaps/allbinding_list.txt','r')
-states = open('../Overlaps/chromstates_list.txt','r')
-pather = '../Matrices/'
-genes = open('../Overlaps/uniqueHT12genes.txt','r')
+windowname = '10kb'
+pwms = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt','r')
+states = open('/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Overlaps/chromstates_list.txt','r')
+pather = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Matrices/' + windowname + '/'
+genes = open('/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_NoGM19238SNPs_NoChrY_Stranded_OneProbePerGene_alt.txt','r')
+olap = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Overlaps/' + windowname + '_allbinding_chromstatesandtss_overlap_sorted.bed'
 
 pwmlist = {}
 for line in pwms:
@@ -27,14 +24,13 @@ statelist = [x.strip() for x in statelist]
 states.close()
 
 genelist = genes.readlines()
-genelist = [x.strip() for x in genelist]
+genelist = [x.strip().split()[6] for x in genelist]
 genes.close()
 
 for state in statelist:
     print state
-    resultsbed = open(sys.argv[1],'r')
-    resultname = pather + state + "." + str(sys.argv[2])
-    resultsmatrix = open(resultname,'w')
+    resultsbed = open(olap,'r')
+    resultsmatrix = open(pather + state + "_resultsmatrix.txt",'w')
     print 'Counting binding events...'
     bindcounts = {}
     for line in resultsbed:
