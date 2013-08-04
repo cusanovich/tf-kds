@@ -4,8 +4,8 @@ import subprocess
 sys.path.insert(0,'/mnt/lustre/home/cusanovich/Programs/lib/python2.6/site-packages/pybedtools-0.6.2-py2.6-linux-x86_64.egg/pybedtools')
 import pybedtools
 
-windowsize = 1000
-windowname = '1kb'
+windowsize = 5000
+windowname = '5kb'
 outter = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint.bed'
 outcombo = open(outter,'w')
 sortcombo = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint_sorted.bed'
@@ -17,7 +17,7 @@ outjustboundbed = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Bi
 
 jacked = '/mnt/lustre/home/cusanovich/centipede/hg19_jack_centipede_sorted_pwms_clean.bed'
 jackbed = pybedtools.BedTool(jacked)
-tssbed = pybedtools.BedTool('/mnt/lustre/home/cusanovich/Kd_Arrays/Centipede/Annotation/HT12expr_ensemblTSScombinedsorted.bed')
+tssbed = pybedtools.BedTool('/mnt/lustre/home/cusanovich/Kd_Arrays/Centipede/Annotation/HT12ensemblTSScombinedsorted.bed')
 
 print 'Calculating midpoints and combining files...'
 jacks = open(jacked,'r')
