@@ -17,3 +17,6 @@ Assuming that all the appropriate annotation files have been generated, here is 
 10. genome_phastcons_windows.sh (calls midpoints.py)
 11. genome_greping.py
 12. genome_annot_overlaps.R
+13. chromatin_bed_converter.py
+14. chromatin_resultsbed2factormatrix.py
+15. chromatin_factormatrix2results.R

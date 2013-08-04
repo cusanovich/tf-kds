@@ -1,14 +1,15 @@
 library('plyr')
 library('stringr')
 library('qvalue')
-#outplots = './Results/3factorresultsplots_All3RUV2K8_NSAveraged2_10kb.pdf'
-resultsbin = "../../Analysis/Results/RUV2_NSAveraged_Results/"
-outdir = "../Results/"
+
+windowname = "1kb"
+resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
+outdir = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Results/",windowname,"/")
 de_threshold = 0.05
-resultsmatrices = list.files(path = "../Matrices/",pattern = ".results10kb.txt")
-#binary.phi = as.matrix(read.table("./PhiTables/AllFactorBinding10kbPhis.txt"))
-factors = read.table("../Overlaps/allbinding_list.txt")
-masterresults = as.matrix(read.table("../../CombinedBinding/allbindingresults10kb.txt"))
+resultsmatrices = list.files(path = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Matrices/",windowname,"/"),
+                             pattern = "_resultsmatrix.txt")
+factors = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt")
+masterresults = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allbindingresults",windowname,".txt")))
 
 all.pvals <- list.files(path = resultsbin,pattern="Pvalues.txt")
 pvals <- llply(paste(resultsbin,all.pvals,sep=""), read.table)
@@ -47,13 +48,8 @@ for(j in 1:3){
 master[[2]] = master[[2]][match(master[[1]][,2],master[[2]][,2]),]
 master[[3]] = master[[3]][match(master[[1]][,2],master[[3]][,2]),]
 
-#pdf(outplots,height=11,width=8.5)
-#heatmap.2(binary.phi,trace="none",main="Binding Phi Correlations",
-#          distfun=function(x) as.dist(1-abs(x)))
-#par(mfrow=c(3,2))
-
 for(x in 1:length(resultsmatrices)){
-  resultsmatrix = as.matrix(read.table(paste0("../Matrices/",resultsmatrices[x]),sep="\t"))
+  resultsmatrix = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Matrices/",windowname,"/",resultsmatrices[x]),sep="\t"))
   chromstate = str_split(resultsmatrices[x],"[.]")[[1]][1]
   resultsbinary = resultsmatrix>0
   resultsbinary = resultsbinary + 0
@@ -71,9 +67,9 @@ for(x in 1:length(resultsmatrices)){
     mastermatch[i] = strsplit(names(master[[2]])[i],"_")[[1]][1]
   }
   listgene = intersect(colnames(resultsmatrix),mastermatch)
-  sp1.ind = match("SP1",listgene)
-  listgene = c(listgene[1:sp1.ind],"SP1",listgene[(sp1.ind+1):length(listgene)])
-  sp1 = 0
+  #sp1.ind = match("SP1",listgene)
+  #listgene = c(listgene[1:sp1.ind],"SP1",listgene[(sp1.ind+1):length(listgene)])
+  #sp1 = 0
   dtfs = matrix(0,61,4)
   dtf.names = c()
   print(chromstate)

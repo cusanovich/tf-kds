@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-windowname = '10kb'
+windowname = '1kb'
 pwms = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt','r')
 states = open('/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Overlaps/chromstates_list.txt','r')
 pather = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Matrices/' + windowname + '/'
@@ -9,6 +9,8 @@ olap = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Overlaps/' + windo
 
 pwmlist = {}
 for line in pwms:
+    if '#' in line:
+        continue
     if line.strip().split()[0] in pwmlist.keys():
         pwmlist[line.strip().split()[0]].append(line.strip().split()[1])
     if line.strip().split()[0] not in pwmlist.keys():
