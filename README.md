@@ -5,6 +5,7 @@ This repository contains all the scripts required to repeat the analysis from Cu
 
 Assuming that all the appropriate annotation files have been generated, here is the order of analysis scripts:
 
+**Script Order**
 1. analysis_allthreeruv2.R
 2. analysis_analyzer.sh (calls analysis_KdLRTRUV2_AverageNS.R)
 3. analysis_ResultsSummary.R

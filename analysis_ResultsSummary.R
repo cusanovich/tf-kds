@@ -66,7 +66,6 @@ master[[3]] = master[[3]][match(master[[1]][,2],master[[3]][,2]),]
 master.overlap = rowSums(master[[2]][,4:dim(master[[2]])[2]] < 0.05)
 lessthanfive = master[[2]][which(master.overlap < 5),1]
 
-
 summar = matrix(NA,length(counts),3)
 for(i in 1:length(counts)){
 	summar[i,1] = namers[i]
@@ -75,18 +74,6 @@ for(i in 1:length(counts)){
 }
 names(summar) = c("Factor","TotalProbes","SigProbes")
 write.table(summar,paste(resultsbin,"SummaryCounts.txt",sep=""),row.names=F,quote=F,sep="\t")
-
-effects = list()
-directions = list()
-ups = c()
-for(i in 4:dim(master[[3]])[2]){
-  directions[[i-3]] = master[[3]][master[[2]][,i] < 0.05,i]
-  ups[i-3] = length(which(master[[3]][master[[2]][,i] < 0.05,i] > 0))/length(master[[3]][master[[2]][,i] < 0.05,i])
-  effects[[i-3]] = abs(master[[3]][master[[2]][,i] < 0.05,i])
-}
-
-densedirs = llply(directions,density)
-denseffects = llply(effects,density)
 
 batchcol = c("black","blue","red")[unlist(batchers)]
 pdf(paste(resultsbin,"SummaryPlots.pdf",sep=""),height=11,width=8.5)
@@ -111,42 +98,6 @@ plot(avekds,log10(as.numeric(summar[,3])),pch=20,col="dodgerblue2",
      cex=1.5,las=1,xlab="Knockdown Level",ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5)
 x = round(cor(avekds,log10(as.numeric(summar[,3])))^2,2)
 legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
-par(mfrow=c(2,1))
-par(oma=c(0,4,0,4) + 0.1)
-boxplot(directions,outline=F,las=2,names=names.clean,axes=F)
-axis(1, at = 1:59, labels = names.clean,las=2,cex.axis=0.4)
-axis(2,las=2)
-box()
-abline(h=0,lwd=3)
-boxplot(directions,outline=F,add=T,col="dodgerblue2",axes=F)
-beanplot(directions,ylab="Log2(Fold-Change)",names=names.clean,las=2,cex.lab=1.5,axes=F,beanlines="median",what=c(1,1,1,0),col="dodgerblue2")
-axis(1, at = 1:59, labels = names.clean,las=2,cex.axis=0.4)
-axis(2,las=2)
-box()
-plot(densedirs[[1]],xlab="Log2(Fold-Change)",ylim=c(0,4.5),las=1,lwd=2,cex.lab=2,col="dodgerblue2")
-for(i in 2:length(densedirs)){
-  lines(densedirs[[i]],col="dodgerblue2",lwd=2)
-}
-boxplot(effects,outline=F,col="indianred",las=2,cex.lab=2,axes=F,ylab="Log2(Fold-Change)",cex.lab=1.5)
-axis(1, at = 1:59, labels = names.clean,las=2,cex.axis=0.4)
-axis(2,las=2)
-box()
-beanplot(effects,ylab="Log2(Fold-Change)",names=names.clean,col="indianred",las=2,log="",cex.lab=1.5,beanlines="median",what=c(1,1,1,0),overallline="median",axes=F)
-axis(1, at = 1:59, labels = names.clean,las=2,cex.axis=0.4)
-axis(2,las=2)
-box()
-plot(denseffects[[1]],xlab="Absolute Log2(Fold-Change)",ylim=c(0,13),las=1,lwd=2,cex.lab=2,col="indianred")
-for(i in 2:length(denseffects)){
-  lines(denseffects[[i]],col="indianred",lwd=2)
-}
-boxplot(ups,notch=T,outpch=20,boxlwd=3,medlwd=4,las=1,cex=2,cex.lab=1.5,col="indianred",outcol="indianred",ylab="Fraction of Genes Repressed")
-abline(h=0.5,lty=3)
-boxplot(ups,notch=T,outpch=20,boxlwd=3,medlwd=4,add=T,axes=F,col="indianred",outcol="indianred")
-plot(seq(-.5,.5,length.out=6),seq(0,4.5,length.out=6),cex.lab=1.5,type="n",xlab="Log2(Fold-Change)",ylab="Density",las=1)
-abline(v=0,lty="dashed")
-polygon(density(unlist(directions)),col="dodgerblue2")
-legend("topright","Repressed Genes",bty="n")
-legend("topleft","Enhanced Genes",bty="n")
 dev.off()
 
 results.m = matrix(NA,1,4)
@@ -228,21 +179,6 @@ for(i in 1:length(secondnames)){
 }
 colnames(second.heat.m) = second.clean
 rownames(second.heat.m) = second.clean
-
-
-#1) read in files
-#2) Summarize counts table into two tables:
-#	- Sig probes by factor
-#	- Total probes
-#3) Make bar plots of summary tables
-#4) write tables to file
-#5) for loop that does the following:
-#	take pairwise pval tables
-#	count total probes in common
-#	count fdr probes in common
-#	test hypergeometric
-#	make table listing - factor1, factor2, No. in common, hypergeometric P
-
 
 results.ma = matrix(NA,1,4)
 for(i in 1:(length(names(pvals))-1)){
