@@ -1,5 +1,5 @@
 library('VennDiagram')
-windowsize="1kb"
+windowsize="10kb"
 bindingmatrix = read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/RUV2_NSAveraged_FACTOR_",windowsize,"BindingWindow_overlaptable.txt"),sep="\t",header=T)
 pdf(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/",windowsize,"_venns.pdf"))
 for(i in 1:dim(bindingmatrix)[1]){

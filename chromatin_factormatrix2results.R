@@ -2,7 +2,7 @@ library('plyr')
 library('stringr')
 library('qvalue')
 
-windowname = "1kb"
+windowname = "5kb"
 resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
 outdir = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Results/",windowname,"/")
 de_threshold = 0.05
@@ -50,7 +50,7 @@ master[[3]] = master[[3]][match(master[[1]][,2],master[[3]][,2]),]
 
 for(x in 1:length(resultsmatrices)){
   resultsmatrix = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Matrices/",windowname,"/",resultsmatrices[x]),sep="\t"))
-  chromstate = str_split(resultsmatrices[x],"[.]")[[1]][1]
+  chromstate = str_split(resultsmatrices[x],"_resultsmatrix")[[1]][1]
   resultsbinary = resultsmatrix>0
   resultsbinary = resultsbinary + 0
   bindingmatrix = matrix(NA,1,15)

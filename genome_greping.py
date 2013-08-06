@@ -218,99 +218,101 @@ for gener in sorted(genecounts.keys()):
 	print >> counting, gener + "\t" + str(genecounts[gener][0]) + "\t" + str(genecounts[gener][1]) + "\t" + str(genecounts[gener][2]) + "\t" + str(genecounts[gener][3])
 
 counting.close()
-print 'Making random estimates...'
-sys.stdout.flush()
-tests = os.listdir(outdir)
-x=1
-for test in sorted(tests):
-#for test in ['GrepChipvCenti']:
-	if 'Grep' not in test:
-		continue
-	masterrandos = {}
-	for i in range(1000):
-		masterrandos[i] = []
-	permresults = open(permdir + test + '.master.perms','w')
-	genes = os.listdir(outdir + test)
-	for gene in sorted(genes):
-#	for gene in ['YY1_second.down.perm.cage']:
-#		if 'YY1' not in gene:
-#			continue
-		if '.perm.' not in gene:
-			continue
-		if '.tf.' in gene:
-			currflen = genecounts[gene.split('.')[0]][0]
-			currclen = genecounts[gene.split('.')[0]][2]
-			tfscope = 'TF'
-		if '.down.' in gene:
-			currflen = genecounts[gene.split('.')[0]][1]
-			currclen = genecounts[gene.split('.')[0]][3]
-			tfscope = 'Downstream'
-		justgene = gene.split('.')[0]
-		print gene + ' randoms (' + str(currflen) + '/' + str(currclen) + ' genes)...'
-		sys.stdout.flush()
-		currdict = {}
-		currperm = open(outdir + test + '/' + gene,'r')
-		for line in currperm:
-			if line == '':
-				print 'pass'
-				continue
-			liner = line.strip().split()
-			if liner[0] not in currdict.keys():
-				currdict[liner[0]] = [liner[1]]
-			else:
-				currdict[liner[0]].append(liner[1])
-		currperm.close()
-		print 'Current dictionary has ' + str(len(currdict)) + ' genes...'
-		sys.stdout.flush()
-		#print currdict[currdict.keys()[0]]
-		generand = []
-		for g in range(1000):
-			#print g
-			random.seed(x)
-		#	if 'IRF4' in gene:
-		#		randogenes = sorted(currdict.keys()).extend(random.sample(sorted(currdict.keys()),50))
-			if 'perm.p' not in gene:
-				randogenes = random.sample(sorted(currdict.keys()),currflen)
-			if 'perm.p' in gene:
-				randogenes = random.sample(sorted(currdict.keys()),currclen)
-			randos = []
-			for rando in randogenes:
-				randos.extend(currdict[rando])
-			if 'GrepChip' in test:
-				if '.tf.' in gene:
-					masterrandostf[g].extend(randos)
-				if '.down.' in gene:
-					masterrandosdown[g].extend(randos)
-				randy = randos.count('centi')/float(len(randos))
-				generand.append(str(randy))
-				x += 1
-				continue
-			if 'GrepDistance' in test:
-				randy = [abs(int(z)) for z in randos]
-				if '.tf.' in gene:
-					masterrandostf[g].extend(randy)
-				if '.down.' in gene:
-					masterrandosdown[g].extend(randy)
-				generand.append(str(numpy.median(randy)))
-				x += 1
-				continue
-			randy = [float(z) for z in randos]
-			if '.tf.' in gene:
-				masterrandostf[g].extend(randy)
-			if '.down.' in gene:
-				masterrandosdown[g].extend(randy)
-			generand.append(str(numpy.median(randy)))
-			x += 1
-		print >> permresults, justgene + "\t" + tfscope + "\t" + "\t".join(generand)
-	permresults.close()
-	currpermresultstf = open(outdir + test + '.alt.tf.perms','w')
-	currpermresultsdown = open(outdir + test + '.alt.down.perms','w')
-	for rep in range(1000):
-		if 'GrepChip' in test:
-			print >> currpermresultstf, str(masterrandostf[rep].count('centi')/float(len(masterrandostf[rep])))
-			print >> currpermresultsdown, str(masterrandosdown[rep].count('centi')/float(len(masterrandosdown[rep])))
-		else:
-			print >> currpermresultstf, str(numpy.median(masterrandostf[rep]))
-			print >> currpermresultsdown, str(numpy.median(masterrandosdown[rep]))
-	currpermresultstf.close()
-	currpermresultsdown.close()
+# print 'Making random estimates...'
+# sys.stdout.flush()
+# tests = os.listdir(outdir)
+# x=1
+# for test in sorted(tests):
+# #for test in ['GrepChipvCenti']:
+# 	if 'Grep' not in test:
+# 		continue
+# 	masterrandostf = {}
+# 	masterrandosdown = {}
+# 	for i in range(1000):
+# 		masterrandostf[i] = []
+# 		masterrandosdown[i] = []
+# 	permresults = open(permdir + test + '.master.perms','w')
+# 	genes = os.listdir(outdir + test)
+# 	for gene in sorted(genes):
+# #	for gene in ['YY1_second.down.perm.cage']:
+# #		if 'YY1' not in gene:
+# #			continue
+# 		if '.perm.' not in gene:
+# 			continue
+# 		if '.tf.' in gene:
+# 			currflen = genecounts[gene.split('.')[0]][0]
+# 			currclen = genecounts[gene.split('.')[0]][2]
+# 			tfscope = 'TF'
+# 		if '.down.' in gene:
+# 			currflen = genecounts[gene.split('.')[0]][1]
+# 			currclen = genecounts[gene.split('.')[0]][3]
+# 			tfscope = 'Downstream'
+# 		justgene = gene.split('.')[0]
+# 		print gene + ' randoms (' + str(currflen) + '/' + str(currclen) + ' genes)...'
+# 		sys.stdout.flush()
+# 		currdict = {}
+# 		currperm = open(outdir + test + '/' + gene,'r')
+# 		for line in currperm:
+# 			if line == '':
+# 				print 'pass'
+# 				continue
+# 			liner = line.strip().split()
+# 			if liner[0] not in currdict.keys():
+# 				currdict[liner[0]] = [liner[1]]
+# 			else:
+# 				currdict[liner[0]].append(liner[1])
+# 		currperm.close()
+# 		print 'Current dictionary has ' + str(len(currdict)) + ' genes...'
+# 		sys.stdout.flush()
+# 		#print currdict[currdict.keys()[0]]
+# 		generand = []
+# 		for g in range(1000):
+# 			#print g
+# 			random.seed(x)
+# 		#	if 'IRF4' in gene:
+# 		#		randogenes = sorted(currdict.keys()).extend(random.sample(sorted(currdict.keys()),50))
+# 			if 'perm.p' not in gene:
+# 				randogenes = random.sample(sorted(currdict.keys()),currflen)
+# 			if 'perm.p' in gene:
+# 				randogenes = random.sample(sorted(currdict.keys()),currclen)
+# 			randos = []
+# 			for rando in randogenes:
+# 				randos.extend(currdict[rando])
+# 			if 'GrepChip' in test:
+# 				if '.tf.' in gene:
+# 					masterrandostf[g].extend(randos)
+# 				if '.down.' in gene:
+# 					masterrandosdown[g].extend(randos)
+# 				randy = randos.count('centi')/float(len(randos))
+# 				generand.append(str(randy))
+# 				x += 1
+# 				continue
+# 			if 'GrepDistance' in test:
+# 				randy = [abs(int(z)) for z in randos]
+# 				if '.tf.' in gene:
+# 					masterrandostf[g].extend(randy)
+# 				if '.down.' in gene:
+# 					masterrandosdown[g].extend(randy)
+# 				generand.append(str(numpy.median(randy)))
+# 				x += 1
+# 				continue
+# 			randy = [float(z) for z in randos]
+# 			if '.tf.' in gene:
+# 				masterrandostf[g].extend(randy)
+# 			if '.down.' in gene:
+# 				masterrandosdown[g].extend(randy)
+# 			generand.append(str(numpy.median(randy)))
+# 			x += 1
+# 		print >> permresults, justgene + "\t" + tfscope + "\t" + "\t".join(generand)
+# 	permresults.close()
+# 	currpermresultstf = open(outdir + test + '.alt.tf.perms','w')
+# 	currpermresultsdown = open(outdir + test + '.alt.down.perms','w')
+# 	for rep in range(1000):
+# 		if 'GrepChip' in test:
+# 			print >> currpermresultstf, str(masterrandostf[rep].count('centi')/float(len(masterrandostf[rep])))
+# 			print >> currpermresultsdown, str(masterrandosdown[rep].count('centi')/float(len(masterrandosdown[rep])))
+# 		else:
+# 			print >> currpermresultstf, str(numpy.median(masterrandostf[rep]))
+# 			print >> currpermresultsdown, str(numpy.median(masterrandosdown[rep]))
+# 	currpermresultstf.close()
+# 	currpermresultsdown.close()

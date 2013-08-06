@@ -262,8 +262,8 @@ for(i in 1:(length(winnertfs)-1)){
     commonexpr = comaster[which(comaster[,de1] < 5 & comaster[,de2] < 5),2]
     deind = match(commonexpr,comaster[,2])
     resultsind = match(commonexpr,rownames(resultsmatrix))
-    commaster = comaster
-    comresults = resultsmatrix
+    commaster = comaster[deind,]
+    comresults = resultsmatrix[resultsind,]
     tfs1 = winnertfs[[i]]
     tfs1 = intersect(tfs1,colnames(comresults))
     tfs2 = winnertfs[[j]]

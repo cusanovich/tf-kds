@@ -6,6 +6,7 @@ This repository contains all the scripts required to repeat the analysis from Cu
 Assuming that all the appropriate annotation files have been generated, here is the order of analysis scripts:
 
 **Script Order**
+
 1. analysis_allthreeruv2.R
 2. analysis_analyzer.sh (calls analysis_KdLRTRUV2_AverageNS.R)
 3. analysis_ResultsSummary.R
@@ -15,9 +16,10 @@ Assuming that all the appropriate annotation files have been generated, here is 
 7. combined_factormatrix2results.R
 8. combined_annotator.R
 9. combined_venns.R
-10. genome_phastcons_windows.sh (calls midpoints.py)
-11. genome_greping.py
-12. genome_annot_overlaps.R
-13. chromatin_bed_converter.py
-14. chromatin_resultsbed2factormatrix.py
-15. chromatin_factormatrix2results.R
+10. combined_EffectSizes.R
+11. genome_phastcons_windows.sh (calls midpoints.py)
+12. genome_greping.py
+13. genome_annot_overlaps.R
+14. chromatin_bed_converter.py
+15. chromatin_resultsbed2factormatrix.py
+16. chromatin_factormatrix2results.R

@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 import sys
 
-if(len(sys.argv)!= 3):
-	sys.stderr.write('Error!! Supplied ' + str(len(sys.argv)) + ' Arguments!!\nUsage: resultsbed2factormatrix.py [BED File] [Results Matrix File]\n\n')
-	sys.exit(1)
-
-resultsbed = open(sys.argv[1],'r')
+windowname = '10kb'
+resultsbed = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowname + '_combined_midpoint_sorted.bed','r')
 pwms = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt','r')
-resultsmatrix = open(sys.argv[2],'w')
+resultsmatrix = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allbindingresults' + windowname + '.txt','w')
 
 pwmlist = {}
 for line in pwms:
