@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-windowname = '1kb'
+windowname = '10kb'
 pwms = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt','r')
 states = open('/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Overlaps/chromstates_list.txt','r')
 pather = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Matrices/' + windowname + '/'

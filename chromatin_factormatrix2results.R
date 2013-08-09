@@ -2,7 +2,7 @@ library('plyr')
 library('stringr')
 library('qvalue')
 
-windowname = "5kb"
+windowname = "10kb"
 resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
 outdir = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Results/",windowname,"/")
 de_threshold = 0.05
