@@ -1,0 +1,11 @@
+de_threshold = 0.05
+windowsize = 10000
+windowname = paste0(windowsize/1000,'kb')
+resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
+bindingmatrix = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allunionbindingresults",windowname,".txt")
+binarytable = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/PhiTables/AllUnionFactorBinding",windowname,"Phis.txt")
+grandpath = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/Union/",windowname,"/")
+masterpath = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/"
+factored = "/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt"
+nobfactored = "/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/nobinding_list.txt"
+censused = "/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/TFcensus.txt"

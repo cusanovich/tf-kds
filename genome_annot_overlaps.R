@@ -1,24 +1,26 @@
 library('plyr')
 library('beanplot')
-windowsize = '10kb'
-grandpath = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/",windowsize,"/")
-masterpath = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/"
-#grandpath = paste0("~/home/Kd_Arrays/GenomeAnnotations/GrepBeds/",windowsize,"/")
+source('./config.R')
+
+centispec = c("GrepPhastCons","GrepPosterior","GrepPWM")
+coloring = list(c("mediumorchid3","goldenrod"),c("indianred","dodgerblue2"))
+#grandpath = paste0("~/home/Kd_Arrays/GenomeAnnotations/GrepBeds/",windowname,"/")
 #masterpath = "~/home/Kd_Arrays/GenomeAnnotations/"
 tests = list.files(grandpath)
 
-pdf(paste0(masterpath,windowsize,"Annotations.pdf"))
+pdf(paste0(masterpath,windowname,"_union_Annotations.pdf"))
 par(mfrow=c(2,2))
 par(mar=c(4,4,6,4)+0.1)
 for(i in 1:length(tests)){
   currtest = tests[i]
   print(currtest)
+  if(currtest == "GrepChipvCenti"){next}
   currpath = paste0(grandpath,currtest)
-#  currmaster = read.table(paste0(masterpath,"Perms/",windowsize,"/",currtest,".master.perms"))
+#  currmaster = read.table(paste0(masterpath,"Perms/",windowname,"/",currtest,".master.perms"))
 #  mastermedstf = apply(currmaster[grep("TF",currmaster[,2]),3:dim(currmaster)[2]],2,median)
 #  mastermedsdown = apply(currmaster[grep("Downstream",currmaster[,2]),3:dim(currmaster)[2]],2,median)
-#  altmastertf = read.table(paste0(masterpath,"Perms/",windowsize,"/",currtest,".alt.tf.perms"))
-#  altmasterdown = read.table(paste0(masterpath,"Perms/",windowsize,"/",currtest,".alt.down.perms"))
+#  altmastertf = read.table(paste0(masterpath,"Perms/",windowname,"/",currtest,".alt.tf.perms"))
+#  altmasterdown = read.table(paste0(masterpath,"Perms/",windowname,"/",currtest,".alt.down.perms"))
   currtfboundfiles = list.files(path=currpath,pattern = ".tf.bound.")
   currtfdefiles = list.files(path=currpath,pattern = ".tf.debound.")
   currdownboundfiles = list.files(path=currpath,pattern = ".down.bound.")
@@ -99,6 +101,18 @@ for(i in 1:length(tests)){
     lines(dense1, col = "indianred",lwd=3)
     lines(dense2, col = "dodgerblue2",lwd=3)
     legend("topright",legend=c("DE","Bound"),fill=c("indianred","dodgerblue2"))
+    dense1 = density(unlist(currdowndes)[abs(unlist(currdowndes)) > 1000])
+    dense2 = density(unlist(currdownbounds)[abs(unlist(currdownbounds)) > 1000])
+    plot(range(dense1$x, dense2$x), range(dense1$y, dense2$y), type = "n", xlab = "Distance",
+         ylab = "Density", main="Distance from TSS (Downstream)")
+    lines(dense1, col = "indianred",lwd=3)
+    lines(dense2, col = "dodgerblue2",lwd=3)
+    legend("topright",legend=c("DE","Bound"),fill=c("indianred","dodgerblue2"))
+    plot(range(-5000, 5000), range(dense1$y, dense2$y), type = "n", xlab = "Distance",
+         ylab = "Density", main="Distance from TSS (Downstream) - Zoom")
+    abline(v=0,lty="dashed",lwd=3)
+    lines(dense1, col = "indianred",lwd=3)
+    lines(dense2, col = "dodgerblue2",lwd=3)
     boxplot(log10(abs(unlist(currtfdes))+0.001),log10(abs(unlist(currtfbounds))+0.001),col=c("indianred","dodgerblue2"),outline=F,
             names=c("DE","Bound"),
             main=paste0(currtest," TF\nP-value = ",signif(wilcox.test(abs(unlist(currtfdes)),abs(unlist(currtfbounds)),na.action = na.omit)$p.value,4),"\n",tfdir),
@@ -142,14 +156,13 @@ for(i in 1:length(tests)){
       currdownbounds = llply(currdownbounds, function(x){log10(x+0.001)})
       currdowndes = llply(currdowndes, function(x){log10(x+0.001)})
     }
+    colorno = ifelse(currtest %in% centispec,1,2)
     boxplot(unlist(currtfdes),unlist(currtfbounds),
-            col=c("indianred","dodgerblue2"),names=c("DE","Bound"),outline=F,
-            main=paste0(currtest," TF\nP-value = ",signif(wilcox.test(unlist(currtfdes),unlist(currtfbounds),na.action = na.omit)$p.value,4),"\n",tfdir),
-            notch=T)
+            col=coloring[[colorno]],names=c("DE","Bound"),outline=F,notch=T,
+            main=paste0(currtest," TF\nP-value = ",signif(wilcox.test(unlist(currtfdes),unlist(currtfbounds),na.action = na.omit)$p.value,4),"\n",tfdir))
     boxplot(unlist(currdowndes),unlist(currdownbounds),
-            col=c("indianred","dodgerblue2"),names=c("DE","Bound"),outline=F,
-            main=paste0(currtest," Downstream\nP-value = ",signif(wilcox.test(unlist(currdowndes),unlist(currdownbounds),na.action = na.omit)$p.value,4),"\n",downdir),
-            notch=T)
+            col=coloring[[colorno]],names=c("DE","Bound"),outline=F,notch=T,
+            main=paste0(currtest," Downstream\nP-value = ",signif(wilcox.test(unlist(currdowndes),unlist(currdownbounds),na.action = na.omit)$p.value,4),"\n",downdir))
 #    hist(mastermedstf,main=paste0(currtest," TF\nEmpirical P-value = ",tfempiricalp),
 #         xlim=c(min(min(mastermedstf),tfmed),max(max(mastermedstf),tfmed)))
 #    abline(v=tfmed,lwd=3,col="indianred")

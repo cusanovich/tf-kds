@@ -3,65 +3,85 @@ import os
 import sys
 import subprocess
 sys.path.insert(0,'/mnt/lustre/home/cusanovich/Programs/lib/python2.6/site-packages/pybedtools-0.6.2-py2.6-linux-x86_64.egg/pybedtools')
-import pybedtools
+from pybedtools import BedTool, featurefuncs
+from kdfunc import pwmdicter
 
 windowsize = 10000
 windowname = str(windowsize/1000) + 'kb'
-outter = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint.bed'
-sortcombo = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint_sorted.bed'
-outbounder = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowname + '_combined_midpoint.bed'
+outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/indiv_factor_beds/'
 outboundonly = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowname + '_combined_midpoint_BoundOnly.bed'
-finalsortcombo = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowname + '_combined_midpoint_sorted.bed'
-chiper = '/mnt/lustre/home/cusanovich/Kd_Arrays/EncodeChipSeq/sorted_EncodeChIP_Uniform_Combined.bed'
+oldout = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowname + '_combined_midpoint_old_sorted.bed'
+newout = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowname + '_combined_midpoint_new_sorted.bed'
+chiped = '/mnt/lustre/home/cusanovich/Kd_Arrays/EncodeChipSeq/sorted_EncodeChIP_Uniform_Combined.bed'
 jacked = '/mnt/lustre/home/cusanovich/centipede/hg19_jack_centipede_sorted_pwms_clean.bed'
 tsss = '/mnt/lustre/home/cusanovich/Kd_Arrays/Centipede/Annotation/HT12ensemblTSScombinedsorted.bed'
+outfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results10kb_combined_midpoint_new.bed'
+outsortfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results10kb_combined_midpoint_new_sorted.bed'
+newcombofile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint_new.bed'
+newcombosortedfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint_new_sorted.bed'
+pwms = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt','r')
+pwmlist = pwmdicter(pwms)
+pwms.close()
 
+def bedmaker(bedrecord,tssrecord,filerecord,unmatched=True):
+	"""Writes bed-like record of all binding within 'w' kb of TSSs."""
+	temper = open('./tempfile','w')
+	sortrecord = bedrecord.sort()
+	print >> temper, tssrecord.window(sortrecord, w=windowsize)
+	if unmatched:
+		print >> temper, tssrecord.window(sortrecord, w=windowsize, v=True)
+		temper.close()
+		sorter = 'grep . ./tempfile | sort -k1,1 -k2,2n -k3,3n -k4,4 > ' + filerecord + '; rm ./tempfile'
+		sorting = subprocess.Popen(sorter,shell=True)
+		sorting.wait()
+	else:
+		temper.close()
+		sorter = 'grep . ./tempfile > ' + filerecord + '; rm ./tempfile'
+		sorting = subprocess.Popen(sorter,shell=True)
+		sorting.wait()
+	return(0)
 
-if 'combinedChipandCenti_midpoint_sorted.bed' not in os.listdir('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/'):
-	print 'Calculating midpoints and combining files...'
-	outcombo = open(outter,'w')
-	jacks = open(jacked,'r')
-	for line in jacks:
-		if line == "":
-			continue
-		liner = line.strip().split()
-		liner[1] = str(int(round((float(liner[1]) + float(liner[2]))/2,0)))
-		liner[2] = str(int(liner[1]) + 1)
-		print >> outcombo, "\t".join(liner)
+def newber(binner,factor):
+	"""Returns bed record with all binding for a factor merged and renamed."""
+	newbie = BedTool(binner).sort().merge(nms=True).each(featurefuncs.midpoint)
+	newbie = newbie.each(featurefuncs.rename,factor)
+	return(newbie)
 
-	jacks.close()
+print "Loading bed files..."
+tssbed = BedTool(tsss)
+jacker = BedTool(jacked)
+chiper = BedTool(chiped)
 
-	chips = open(chiper,'r')
-	for line in chips:
-		if line == "":
-			continue
-		liner = line.strip().split()
-		liner[1] = str(int(round((float(liner[1]) + float(liner[2]))/2,0)))
-		liner[2] = str(int(liner[1]) + 1)
-		print >> outcombo, "\t".join(liner)
+print "Combining binding files..."
+comber = chiper.cat(jacker,force_truncate=False,postmerge=False).moveto('./combtemp.bed')
 
-	chips.close()
-	outcombo.close()
+print "Generating oldstyle bed file..."
+oldstyle = comber.each(featurefuncs.midpoint)
+oldstyle2 = bedmaker(oldstyle,tssbed,oldout)
 
-	print 'Sorting combined records...'
-	sorter = 'grep . ' + outter + ' | sort -k1,1 -k2,2n -k3,3n -k4,4 > ' + sortcombo + '; rm ' + outter
-	sorting = subprocess.Popen(sorter,shell=True)
-	sorting.wait()
+print "Generating newstyle bed files..."
+for factor in sorted(pwmlist.keys()):
+	print factor
+	for model in pwmlist[factor]:
+		print model
+		grepper = 'grep ' + model + ' ./combtemp.bed >> ./temp1.bed'
+		grepping = subprocess.Popen(grepper,shell=True)
+		grepping.wait()
+	newbie = newber('./temp1.bed',factor)
+	newbie2 = bedmaker(newbie,tssbed,outdir + factor + '_midpoint_sorted.bed',unmatched=False)
+	noob = newber('./temp1.bed',factor).moveto('./temp2.bed')
+	cleaner = 'cat ./temp2.bed >> ' + newcombofile + '; rm ./temp1.bed; rm ./temp2.bed'
+	cleaning = subprocess.Popen(cleaner,shell=True)
+	cleaning.wait()
 
-print 'Intersecting records with TSSs...'
-outboundbed = open(outbounder,'w')
-outjustboundbed = open(outboundonly,'w')
-tssbed = pybedtools.BedTool(tsss)
-combobed = pybedtools.BedTool(sortcombo)
+print "Combining newstyle bed files..."
+beds = os.listdir(outdir)
+for bed in beds:
+	mover = 'cat ' + outdir + bed + ' >> ' + outfile
+	moving = subprocess.Popen(mover,shell=True)
+	moving.wait()
 
-print >> outboundbed, tssbed.window(combobed, w=windowsize)
-print >> outjustboundbed, tssbed.window(combobed, w=windowsize)
-print >> outboundbed, tssbed.window(combobed, w=windowsize, v=True)
-
-outboundbed.close()
-outjustboundbed.close()
-
-print 'Sorting intersected records...'
-sorter = 'grep . ' + outbounder + ' | sort -k1,1 -k2,2n -k3,3n -k4,4 > ' + finalsortcombo + '; rm ' + outbounder
-sorting = subprocess.Popen(sorter,shell=True)
-sorting.wait()
+print "Cleaning up a bit..."
+cleaner = 'sort -k1,1 -k2,2n -k3,3n -k4,4 ' + outfile + ' > ' + outsortfile + '; rm ' + outfile + '; rm ./combtemp.bed; sort -k1,1 -k2,2n -k3,3n -k4,4 ' + newcombofile + ' > ' + newcombosortedfile + '; rm ' + newcombofile
+cleaning = subprocess.Popen(cleaner,shell=True)
+cleaning.wait()

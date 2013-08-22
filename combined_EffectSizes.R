@@ -1,9 +1,10 @@
 library('plyr')
 library('gplots')
 library('beanplot')
-windowsize = "10kb"
-resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
-resultsmatrix = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allbindingresults",windowsize,".txt"),sep="\t"))
+source('./config.R')
+
+effectspdf = paste0(resultsbin,windowname,"_EffectsPlots.pdf")
+resultsmatrix = as.matrix(read.table(bindingmatrix,sep="\t"))
 
 all.pvals <- list.files(path = resultsbin,pattern="Pvalues.txt")
 pvals <- llply(paste(resultsbin,all.pvals,sep=""), read.table)
@@ -77,7 +78,7 @@ for(i in 4:dim(master[[3]])[2]){
 densedirs = llply(directions,density)
 denseffects = llply(effects,density)
 
-pdf(paste(resultsbin,"EffectsPlots.pdf",sep=""),height=11,width=8.5)
+pdf(effectspdf,height=11,width=8.5)
 par(mgp=c(3,1,0))
 par(mar=c(5, 5, 4, 2) + 0.1)
 par(mfrow=c(2,1))

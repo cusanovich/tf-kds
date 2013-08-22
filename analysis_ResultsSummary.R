@@ -96,7 +96,7 @@ par(mgp=c(3,1,0))
 par(mar=c(5, 5, 4, 2) + 0.1)
 plot(avekds,log10(as.numeric(summar[,3])),pch=20,col="dodgerblue2",
      cex=1.5,las=1,xlab="Knockdown Level",ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5)
-x = round(cor(avekds,log10(as.numeric(summar[,3])))^2,2)
+x = round(cor(avekds,log10(as.numeric(summar[,3])))^2,3)
 legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
 dev.off()
 

@@ -9,7 +9,7 @@ de_threshold = 0.05
 resultsmatrices = list.files(path = paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Matrices/",windowname,"/"),
                              pattern = "_resultsmatrix.txt")
 factors = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt")
-masterresults = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allbindingresults",windowname,".txt")))
+masterresults = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allunionbindingresults",windowname,".txt")))
 
 all.pvals <- list.files(path = resultsbin,pattern="Pvalues.txt")
 pvals <- llply(paste(resultsbin,all.pvals,sep=""), read.table)

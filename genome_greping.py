@@ -3,27 +3,18 @@ import os
 import sys
 import random
 import numpy
+from kdfunc import genereader, pathmaker
 
-windowsize = '1kb'
-grepdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/' + windowsize + '/'
-outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/' + windowsize + '/'
-permdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Perms/' + windowsize + '/'
+windowsize = '10kb'
+grepdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/Union/' + windowsize + '/'
+outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/GrepBeds/Union/' + windowsize + '/'
+permdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Perms/Union/' + windowsize + '/'
 genelists = os.listdir(grepdir)
 genelist = sorted(set([x.split('.')[0] for x in genelists]))
 #genelist = ['ARNTL2_old']
 factors = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt'
-masterfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowsize + '_combined_midpoint_sorted.bed'
+masterfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowsize + '_combined_midpoint_new_sorted.bed'
 centifile = '/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/FinalAnnots/' + windowsize + 'results_phastcons_sorted_midpoint.bed'
-
-def genereader(thisfile):
-	currfile = open(thisfile,'r')
-	return(currfile.readline().strip().split('|'))
-
-def pathmaker(path):
-	try:
-		os.makedirs(path)
-	except OSError:
-		print 'Warning: ' + path + ' already exists!'
 
 genecounts = {}
 pathmaker(outdir + 'GrepDistance/')
@@ -57,11 +48,11 @@ for gene in genelist:
 	currcentidowns = []
 	for line in currf:
 		if line.strip().split()[0] in currtf:
-			currfactor.append(line.strip().split()[1])
+			currfactor.append(line.strip().split()[0])
 			if len(line.strip().split()[1].split('_')) == 1:
 				currcentifactor.append(line.strip().split()[1])
 		if line.strip().split()[0] in currdownstream:
-			currdowns.append(line.strip().split()[1])
+			currdowns.append(line.strip().split()[0])
 			if len(line.strip().split()[1].split('_')) == 1:
 				currcentidowns.append(line.strip().split()[1])
 	currf.close()
@@ -79,21 +70,21 @@ for gene in genelist:
 		oneperm = open(outdir + 'GrepDistance/' + gene + '.tf.perm.distance','w')
 		two = open(outdir + 'GrepCage/' + gene + '.tf.bound.cage','w')
 		twoperm = open(outdir + 'GrepCage/' + gene + '.tf.perm.cage','w')
-		three = open(outdir + 'GrepChipvCenti/' + gene + '.tf.bound.chipvcenti','w')
+	#	three = open(outdir + 'GrepChipvCenti/' + gene + '.tf.bound.chipvcenti','w')
 		threeperm = open(outdir + 'GrepChipvCenti/' + gene + '.tf.perm.chipvcenti','w')
 		oneone = open(outdir + 'GrepDistance/' + gene + '.tf.debound.distance','w')
 		twotwo = open(outdir + 'GrepCage/' + gene + '.tf.debound.cage','w')
-		threethree = open(outdir + 'GrepChipvCenti/' + gene + '.tf.debound.chipvcenti','w')
+	#	threethree = open(outdir + 'GrepChipvCenti/' + gene + '.tf.debound.chipvcenti','w')
 	if len(currdowns) > 0:
 		ten = open(outdir + 'GrepDistance/' + gene + '.down.boundplus.distance','w')
 		tenperm = open(outdir + 'GrepDistance/' + gene + '.down.perm.distance','w')
 		eleven = open(outdir + 'GrepCage/' + gene + '.down.boundplus.cage','w')
 		elevenperm = open(outdir + 'GrepCage/' + gene + '.down.perm.cage','w')
-		twelve = open(outdir + 'GrepChipvCenti/' + gene + '.down.boundplus.chipvcenti','w')
+	#	twelve = open(outdir + 'GrepChipvCenti/' + gene + '.down.boundplus.chipvcenti','w')
 		twelveperm = open(outdir + 'GrepChipvCenti/' + gene + '.down.perm.chipvcenti','w')
 		tenten = open(outdir + 'GrepDistance/' + gene + '.down.deboundplus.distance','w')
 		eleveneleven = open(outdir + 'GrepCage/' + gene + '.down.deboundplus.cage','w')
-		twelvetwelve = open(outdir + 'GrepChipvCenti/' + gene + '.down.deboundplus.chipvcenti','w')
+	#	twelvetwelve = open(outdir + 'GrepChipvCenti/' + gene + '.down.deboundplus.chipvcenti','w')
 	for line in master:
 		strand = 1
 		liner = line.strip().split()
@@ -109,20 +100,20 @@ for gene in genelist:
 					print >> two, liner[4].split('_')[0]
 					print >> twoperm, liner[3] + "\t" + liner[4].split('_')[0]
 					tfcagegenes.append(liner[3])
-				chiper = 'chip'
-				if len(liner[9].split('_')) < 2:
-					chiper = 'centi'
-				print >> three, chiper
-				print >> threeperm, liner[3] + "\t" + chiper
+		#		chiper = 'chip'
+		#		if len(liner[9].split('_')) < 2:
+		#			chiper = 'centi'
+		#		print >> three, chiper
+		#		print >> threeperm, liner[3] + "\t" + chiper
 			if liner[3] in currde:
 				print >> oneone, strand*(int(liner[8]) - int(liner[2]))
 				if liner[3] not in tfcagegenes:
 					print >> twotwo, liner[4].split('_')[0]
 					tfcagegenes.append(liner[3])
-				chiper = 'chip'
-				if len(liner[9].split('_')) < 2:
-					chiper = 'centi'
-				print >> threethree, chiper
+		#		chiper = 'chip'
+		#		if len(liner[9].split('_')) < 2:
+		#			chiper = 'centi'
+		#		print >> threethree, chiper
 		if liner[9] in currdowns:
 			if liner[3] in currboundplus:
 				print >> ten, strand*(int(liner[8]) - int(liner[2]))
@@ -131,25 +122,27 @@ for gene in genelist:
 					print >> eleven, liner[4].split('_')[0]
 					print >> elevenperm, liner[3] + "\t" + liner[4].split('_')[0]
 					downcagegenes.append(liner[3])
-				chiper = 'chip'
-				if len(liner[9].split('_')) < 2:
-					chiper = 'centi'
-				print >> twelve, chiper
-				print >> twelveperm, liner[3] + "\t" + chiper
+		#		chiper = 'chip'
+		#		if len(liner[9].split('_')) < 2:
+		#			chiper = 'centi'
+		#		print >> twelve, chiper
+		#		print >> twelveperm, liner[3] + "\t" + chiper
 			if liner[3] in currdeplus:
 				print >> tenten, strand*(int(liner[8]) - int(liner[2]))
 				if liner[3] not in downcagegenes:
 					print >> eleveneleven, liner[4].split('_')[0]
 					downcagegenes.append(liner[3])
-				chiper = 'chip'
-				if len(liner[9].split('_')) < 2:
-					chiper = 'centi'
-				print >> twelvetwelve, chiper
+		#		chiper = 'chip'
+		#		if len(liner[9].split('_')) < 2:
+		#			chiper = 'centi'
+		#		print >> twelvetwelve, chiper
 	master.close()
 	if len(currfactor) > 0:
-		one.close(),oneperm.close(),two.close(),twoperm.close(),three.close(),threeperm.close(),oneone.close(),twotwo.close(),threethree.close()
+	#	one.close(),oneperm.close(),two.close(),twoperm.close(),three.close(),threeperm.close(),oneone.close(),twotwo.close(),threethree.close()
+		one.close(),oneperm.close(),two.close(),twoperm.close(),oneone.close(),twotwo.close()
 	if len(currdowns) > 0:
-		ten.close(),tenperm.close(),eleven.close(),elevenperm.close(),twelve.close(),twelveperm.close(),tenten.close(),eleveneleven.close(),twelvetwelve.close()
+	#	ten.close(),tenperm.close(),eleven.close(),elevenperm.close(),twelve.close(),twelveperm.close(),tenten.close(),eleveneleven.close(),twelvetwelve.close()
+		ten.close(),tenperm.close(),eleven.close(),elevenperm.close(),tenten.close(),eleveneleven.close()
 	print 'Splitting Centipede Records...'
 	sys.stdout.flush()
 	master = open(centifile,'r')

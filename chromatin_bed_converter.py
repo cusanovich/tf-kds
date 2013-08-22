@@ -2,10 +2,10 @@
 import sys
 import subprocess
 
-windowsize = '1000'
+windowsize = '10000'
 windowname = str(int(windowsize)/1000) + 'kb'
 
-bindbed = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint_sorted.bed'
+bindbed = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint_new_sorted.bed'
 chrombed = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/RawData/wgEncodeBroadHmmGm12878HMM.bed.gz'
 openbed = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/RawData/wgEncodeAwgDnaseUwdukeGm12878UniPk.narrowPeak.gz'
 opentagbed = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Overlaps/DNase_tagged.bed'

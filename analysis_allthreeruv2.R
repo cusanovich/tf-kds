@@ -1,57 +1,62 @@
-library(limma)
-library(lumi)
-library(gplots)
-library(stringr)
-library(qvalue)
+library('limma')
+library('lumi')
+library('gplots')
+library('stringr')
+library('qvalue')
 
-RUV2 = function(Y, ctl, k, Z=matrix(rep(1, ncol(Y))),first=NULL,second=NULL,old=NULL)
-{
-    # Project onto the orthogonal complement of Z
-    # DC - this just means regress out the intercept
-    RZY = Y - Y%*%Z%*%solve(t(Z)%*%Z)%*%t(Z)
-    # Perform SVD
-    W = svd(RZY[ctl,])$v
-    # Keep the first k factors
-    W = W[,1:k]
-    # Fit using Limma and return
-    mod1 = cbind(Z,W)
-    gammahat = (Y %*% mod1 %*% solve(t(mod1) %*% mod1))[,2:dim(mod1)[2]]
-    Yfit = Y - gammahat %*% t(W)
-    Ysub1 = Yfit[,c(first,second)]
-    X1 = rep(c(0,1),times=c(length(first),length(second)))
-    fit1 = lmFit(Ysub1,cbind(X1,Z[1:dim(Ysub1)[2]]))
-    fit1 = eBayes(fit1)
-    fit1 = fit1$p.value[,1]
-    fit1.q = qvalue(fit1)$qvalues
-    fit1 = length(which(fit1.q < 0.05))
-    
-    Ysub2 = Yfit[,c(first,old)]
-    X2 = rep(c(0,1),times=c(length(first),length(old)))
-    fit2 = lmFit(Ysub2,cbind(X2,Z[1:dim(Ysub2)[2]]))
-    fit2 = eBayes(fit2)
-    fit2 = fit2$p.value[,1]
-    fit2.q = qvalue(fit2)$qvalues
-    fit2 = length(which(fit2.q < 0.05))
-    return(list(fit1,fit2))
+RUV2 = function(Y,ctl,k){
+  Z = matrix(rep(1, ncol(Y)))
+  # Regress out the intercept
+  RZY = Y - Y%*%Z%*%solve(t(Z)%*%Z)%*%t(Z)
+  # Perform SVD
+  W = svd(RZY[ctl,])$v
+  # Keep the first k factors
+  W = W[,1:k]
+  # Regress out k factors
+  mod1 = cbind(Z,W)
+  gammahat = (Y %*% mod1 %*% solve(t(mod1) %*% mod1))[,2:dim(mod1)[2]]
+  Yfit = Y - gammahat %*% t(W)
 }
 
+splitter = function(expr,firstbatch=NULL,secondbatch=NULL,oldbatch=NULL,first.ind=NULL,second.ind=NULL,old.ind=NULL){
+  expr_firstbatch = expr[,firstbatch]
+  expr_secondbatch = expr[,secondbatch]
+  expr_oldbatch = expr[,oldbatch]
+  first = expr_firstbatch[first.ind,]
+  second = expr_secondbatch[second.ind,]
+  old = expr_oldbatch[old.ind,]
+  return(list(first = first,second = second,old = old))
+}
 
-#Set working directory...
-#setwd("E:/Research Efforts/TF Knockdowns/Knockdowns/RNAi/Expression Results/Kd_Arrays")
+ruvfit = function(Yfit,group1=NULL,group2=NULL){
+    Ysub = Yfit[,c(group1,group2)]
+    X = rep(c(0,1),times=c(length(group1),length(group2)))
+    Z = matrix(rep(1, ncol(Yfit)))
+    fit = lmFit(Ysub,cbind(X,Z[1:dim(Ysub)[2]]))
+    fit.ebayes = eBayes(fit)
+    fit.p = fit.ebayes$p.value[,1]
+    fit.q = qvalue(fit.p)$qvalues
+    fit.count = length(which(fit.q < 0.05))
+    return(list(p=fit.p,q=fit.q,count=fit.count))
+}
 
+ruvtest = function(Y,ctl,k,group1=NULL,group2=NULL,group3=NULL){
+  Yfit = RUV2(Y=Y,ctl=ctl,k=k)
+  fit1 = ruvfit(Yfit,group1=group1,group2=group2)  
+  fit2 = ruvfit(Yfit,group1=group1,group2=group3)
+  return(list(fit1,fit2))
+}
 #Load annotation files...
 classy = c('numeric',rep('factor',times=9),'numeric','factor',
            rep('numeric',times=2),rep('factor',times=5))
 covariates = read.csv("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/RawExprs/CombiningInfo.csv",colClasses=classy)
 probereport = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_NoGM19238SNPs_NoChrY_Stranded_OneProbePerGene_alt.txt",header=T)
 detection = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/RawExprs/allthree_detection.txt")
-allprobes = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_Stranded.txt",header=T)
 targets = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/TargetSummary.txt")
 tfs = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/TFcensus.txt",header=T,sep="\t",fill=NA)
 #covariates = read.csv("~/home/Kd_Arrays/Analysis/RawExprs/CombiningInfo.csv",colClasses=classy)
 #probereport = read.table("~/home/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_NoGM19238SNPs_NoChrY_Stranded_OneProbePerGene_alt.txt",header=T)
 #detection = read.table("~/home/Kd_Arrays/Analysis/RawExprs/allthree_detection.txt")
-#allprobes = read.table("~/home/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_Stranded.txt",header=T)
 #targets = read.table("~/home/Kd_Arrays/Analysis/Annotations/TargetSummary.txt")
 #tfs = read.table("~/home/Kd_Arrays/CombinedBinding/Annotations/TFcensus.txt",header=T,sep="\t",fill=NA)
 tfs = tfs[,c(1,2,6)]
@@ -70,8 +75,6 @@ goodprobes = intersect(probereport$probeID,probes)
 good.ind = which(probes %in% goodprobes)
 seventwos = grep("72",covariates$X48or72)
 covariates_seventwos = covariates[seventwos,]
-
-
 
 expr_trans_good = expr_trans[good.ind,]
 detection_good = detection[good.ind,]
@@ -106,35 +109,12 @@ ctl = expressed.ind[var.ind]
 
 dereport = matrix(0,50,2)
 for(i in 1:50){
-    testruv = RUV2(Y=as.matrix(expr_quant_best),ctl=ctl,k=i,first=ns.first,second=ns.second,old=ns.old)
-    dereport[i,1] = testruv[[1]][1]
-    dereport[i,2] = testruv[[2]][1]
+    testerruv = ruvtest(Y=as.matrix(expr_quant_best),ctl=ctl,k=i,group1=ns.first,group2=ns.second,group3=ns.old)
+    dereport[i,1] = testerruv[[1]]$count
+    dereport[i,2] = testerruv[[2]]$count
 }
 plot(dereport[,1])
 points(dereport[,2],pch=19)
-
-k=8
-Y = expr_quant_best
-Z=matrix(rep(1, ncol(Y)))
-RZY = Y - Y%*%Z%*%solve(t(Z)%*%Z)%*%t(Z)
-W = svd(RZY[ctl,])$v
-W = W[,1:k]
-mod1 = cbind(Z,W)
-gammahat = (Y %*% mod1 %*% solve(t(mod1) %*% mod1))[,2:dim(mod1)[2]]
-Yfit = Y - gammahat %*% t(W)
-
-test = paste(colnames(Yfit)[133:201],"_Old",sep="")
-
-splitter = function(expr,firstbatch=NULL,secondbatch=NULL,oldbatch=NULL,first.ind=NULL,second.ind=NULL,old.ind=NULL){
-    expr_firstbatch = expr[,firstbatch]
-    expr_secondbatch = expr[,secondbatch]
-    expr_oldbatch = expr[,oldbatch]
-    first = expr_firstbatch[first.ind,]
-    second = expr_secondbatch[second.ind,]
-    old = expr_oldbatch[old.ind,]
-    
-    return(list(first = first,second = second,old = old))
-}
 
 detection_firstbatch = detection_best[,firstbatch]
 detection_secondbatch = detection_best[,secondbatch]
@@ -143,6 +123,7 @@ detect_firstbatch.ind = which(rowSums(detection_firstbatch<0.01) > 1)
 detect_secondbatch.ind = which(rowSums(detection_secondbatch<0.01) > 1)
 detect_oldbatch.ind = which(rowSums(detection_oldbatch<0.01) > 1)
 
+Yfit = RUV2(Y=expr_quant_best,ctl=ctl,k=8)
 Ysplit = splitter(expr=Yfit,firstbatch=firstbatch,secondbatch=secondbatch,oldbatch=oldbatch,first.ind=detect_firstbatch.ind,second.ind=detect_secondbatch.ind,old.ind=detect_oldbatch.ind)
 Yquant = splitter(expr=expr_quant_best,firstbatch=firstbatch,secondbatch=secondbatch,oldbatch=oldbatch,first.ind=detect_firstbatch.ind,second.ind=detect_secondbatch.ind,old.ind=detect_oldbatch.ind)
 
@@ -155,19 +136,8 @@ heatmap.2(cor(Yfit,method="spearman"),distfun=function(x) as.dist(1-abs(x)),trac
 #write.table(Ysplit$old,"expr_oldbatch_ruv2.txt")
 #write.table(Yquant$old,"expr_oldbatch.txt")
 
-RUV2.test = function(Y, ctl, k, Z=matrix(rep(1, ncol(Y))),irf=NULL,sp1=NULL,ns=NULL)
-{
-  # Project onto the orthogonal complement of Z
-  # DC - this just means regress out the intercept
-  RZY = Y - Y%*%Z%*%solve(t(Z)%*%Z)%*%t(Z)
-  # Perform SVD
-  W = svd(RZY[ctl,])$v
-  # Keep the first k factors
-  W = W[,1:k]
-  # Fit using Limma and return
-  mod1 = cbind(Z,W)
-  gammahat = (Y %*% mod1 %*% solve(t(mod1) %*% mod1))[,2:dim(mod1)[2]]
-  Yfit = Y - gammahat %*% t(W)
+RUV2.test = function(Y, ctl, k,irf=NULL,sp1=NULL,ns=NULL){
+  Yfit = RUV2(Y=Y,ctl=ctl,k=k)
   X = rep(c(0,1),times=c(3,6))
   Ysub.irf.old = Yfit[,c(irf[1:3],ns[1:6])]
   fit1 = lmFit(Ysub.irf.old,cbind(X,Z[1:dim(Ysub.irf.old)[2]]))

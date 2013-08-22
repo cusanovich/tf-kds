@@ -1,18 +1,20 @@
 library('plyr')
 library('stringr')
-windowsize="1kb"
-resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
+library('beanplot')
+library('vioplot')
+source('./config.R')
+
 outdir = "/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/"
-grepbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/"
-de_threshold = 0.05
-factors = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt")
-resultsmatrix = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allbindingresults",windowsize,".txt"),sep="\t"))
+grepbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/NoProm/"
+pdfout = paste0(outdir,windowname,"_noprom_NumTFsBindingDEGenes.pdf")
+factors = as.matrix(read.table(factored))
+resultsmatrix = as.matrix(read.table(bindingmatrix,sep="\t"))
 resultsmatrix = resultsmatrix[which(rowSums(resultsmatrix) > 0),]
 resultsmatrix = resultsmatrix[,which(colSums(resultsmatrix) > 0)]
 resultsbinary = resultsmatrix>0
 resultsbinary = resultsbinary + 0
 
-factors = factors[match(colnames(resultsmatrix),factors$V1),]
+factors = factors[match(colnames(resultsmatrix),factors[,1]),]
 
 all.pvals <- list.files(path = resultsbin,pattern="Pvalues.txt")
 pvals <- llply(paste(resultsbin,all.pvals,sep=""), read.table)
@@ -66,9 +68,9 @@ for(i in 4:dim(master[[2]])[2]){
   currresultsmatrix = resultsmatrix[match(commongenes,rownames(resultsmatrix)),]
   currresultsbinary = resultsbinary[match(commongenes,rownames(resultsbinary)),]
   winners = unique(currmaster[which(currmaster[,2]<= de_threshold),1])
-  winnerfactors = factors$V3[factors$V3 %in% winners]
+  winnerfactors = factors[,3][factors[,3] %in% winners]
   winnerfactors = setdiff(winnerfactors,factors[match(matchgene,factors[,1]),3])
-  winnerfactornames = as.character(factors[match(winnerfactors,factors$V3),1])
+  winnerfactornames = as.character(factors[match(winnerfactors,factors[,3]),1])
   matrixcol = grep(matchgene,colnames(currresultsmatrix))
   downstreamcol = matrixcol
   for(k in 1:length(winnerfactornames)){
@@ -98,22 +100,22 @@ for(i in 4:dim(master[[2]])[2]){
   bound[[length(bound)+1]] = currresultsmatrix[match(justbound,rownames(currresultsmatrix)),matrixcol]
   bound.bound[[length(bound.bound)+1]] = currresultsmatrix[match(justbound,rownames(currresultsmatrix)),matrixcol]
   write.table(paste(winnerbound,collapse="|"),
-              paste0(grepbin,windowsize,"/",currgene,".DEandBound.txt"),row.names=F,
+              paste0(grepbin,windowname,"/",currgene,".DEandBound.txt"),row.names=F,
               col.names=F,quote=F)
   write.table(paste(justbound,collapse="|"),
-              paste0(grepbin,windowsize,"/",currgene,".Bound.txt"),row.names=F,col.names=F,
+              paste0(grepbin,windowname,"/",currgene,".Bound.txt"),row.names=F,col.names=F,
               quote=F)
   write.table(paste(downwinnerbound,collapse="|"),
-              paste0(grepbin,windowsize,"/",currgene,".DEandBoundPlus.txt"),row.names=F,
+              paste0(grepbin,windowname,"/",currgene,".DEandBoundPlus.txt"),row.names=F,
               col.names=F,quote=F)
   write.table(paste(justdownbound,collapse="|"),
-              paste0(grepbin,windowsize,"/",currgene,".BoundPlus.txt"),row.names=F,
+              paste0(grepbin,windowname,"/",currgene,".BoundPlus.txt"),row.names=F,
               col.names=F,quote=F)
   write.table(paste(colnames(currresultsmatrix)[matrixcol],collapse="|"),
-              paste0(grepbin,windowsize,"/",currgene,".BindingTF.txt"),row.names=F,
+              paste0(grepbin,windowname,"/",currgene,".BindingTF.txt"),row.names=F,
               col.names=F,quote=F)
   write.table(paste(colnames(currresultsmatrix)[downstreamcol],collapse="|"),
-              paste0(grepbin,windowsize,"/",currgene,".DownstreamTFs.txt"),row.names=F,
+              paste0(grepbin,windowname,"/",currgene,".DownstreamTFs.txt"),row.names=F,
               col.names=F,quote=F)
   if(length(boundgenes) < 1){
     bound.t = c(bound.t,NA)
@@ -159,12 +161,17 @@ u.bound = signif(wilcox.test(unlist(bound.de),unlist(bound.bound),na.rm=T)$p.val
 u.down = signif(wilcox.test(unlist(down.de),unlist(down.bound),na.rm=T)$p.value,4)
 u.binary = signif(wilcox.test(unlist(binary.de),unlist(binary.bound),na.rm=T)$p.value,4)
 
-pdf(paste0(outdir,windowsize,"NumTFsBindingDEGenes.pdf"))
+pdf(pdfout)
 par(mfrow=c(2,2))
 boxplot(unlist(bound.de),unlist(bound.bound),na.rm=T,log="y",outline=F,
         col=c("indianred","dodgerblue2"),las=1,ylab="No. of Binding Events",
         main=paste0("Kd Binding Only\nP-value = ",format(u.bound)),
         names=c("DE","Bound Only"),notch=T,boxlwd=3,medlwd=4,cex.lab=1.5)
+plot(seq(0,2,length.out=6),
+     seq(0,max(c(log10(unlist(bound.de)),log10(unlist(bound.bound)))),length.out=6),
+     cex.lab=1.5,type="n",xlab="",ylab="Log10(No. of Binding Events)",las=1)
+#vioplot(log10(unlist(bound.bound)), horizontal=FALSE, at=1.5,col="dodgerblue2",add=T)
+#vioplot(log10(unlist(bound.de)), horizontal=FALSE, at=0.5,col="indianred",add=T)
 print(length(unlist(bound.bound)))
 print(mean(unlist(bound.bound)))
 boxplot(unlist(down.de),unlist(down.bound),na.rm=T,log="y",outline=F,

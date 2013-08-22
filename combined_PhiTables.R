@@ -1,5 +1,6 @@
-windowsize = "10kb"
-resultsmatrix = as.matrix(read.table(paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/allbindingresults",windowsize,".txt"),sep="\t"))
+source('./config.R')
+
+resultsmatrix = as.matrix(read.table(bindingmatrix),sep="\t")
 resultsmatrix = resultsmatrix[which(rowSums(resultsmatrix) > 0),]
 resultsmatrix = resultsmatrix[,which(colSums(resultsmatrix) > 0)]
 resultsbinary = resultsmatrix>0
@@ -23,4 +24,4 @@ for(i in 1:(dim(resultsbinary)[2])-1){
 colnames(binary.phi) = colnames(resultsmatrix)
 rownames(binary.phi) = colnames(resultsmatrix)
 
-write.table(binary.phi,paste0("/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/PhiTables/AllFactorBinding",windowsize,"Phis.txt"))
+write.table(binary.phi,binarytable)

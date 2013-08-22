@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from kdfunc import pwmdicter
 
 windowname = '10kb'
 pwms = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt','r')
@@ -7,15 +8,7 @@ pather = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Matrices/' + win
 genes = open('/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/HT-12v4R2_Probes_inhg19EnsemblGenes_NoGM19238SNPs_NoChrY_Stranded_OneProbePerGene_alt.txt','r')
 olap = '/mnt/lustre/home/cusanovich/Kd_Arrays/ChromatinStates/Overlaps/' + windowname + '_allbinding_chromstatesandtss_overlap_sorted.bed'
 
-pwmlist = {}
-for line in pwms:
-    if '#' in line:
-        continue
-    if line.strip().split()[0] in pwmlist.keys():
-        pwmlist[line.strip().split()[0]].append(line.strip().split()[1])
-    if line.strip().split()[0] not in pwmlist.keys():
-        pwmlist[line.strip().split()[0]] = [line.strip().split()[1]]
-
+pwmlist = pwmdicter(pwms)
 pwms.close()
 factorcount = len(pwmlist)
 print factorcount
@@ -36,18 +29,19 @@ for state in statelist:
     print 'Counting binding events...'
     bindcounts = {}
     for line in resultsbed:
-        if len(line.strip().split()) > 9 and state not in line.strip().split()[14]:
+        if len(line.strip().split()) > 9 and state not in line.strip().split()[13]:
             continue
         if line.strip().split()[0] == 'chrY':
             continue
         geneid = line.strip().split()[3]
         if geneid not in bindcounts.keys():
             bindcounts[geneid] = [0]*factorcount
-        if len(line.strip().split()) > 9 and state in line.strip().split()[14]:
+        if len(line.strip().split()) > 9 and state in line.strip().split()[13]:
             binder = line.strip().split()[9]
-            for factor in factororder:
-                if binder in pwmlist[factor]:
-                    bindcounts[geneid][factororder.index(factor)] += 1
+            bindcounts[geneid][factororder.index(binder)] += 1
+    #        for factor in factororder:
+    #            if binder in pwmlist[factor]:
+    #                bindcounts[geneid][factororder.index(factor)] += 1
 
     print 'Writing results...'
     print >> resultsmatrix, '"' + '"\t"'.join(factororder) + '"'
