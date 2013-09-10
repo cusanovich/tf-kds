@@ -1,7 +1,10 @@
 library('plyr')
 library('gplots')
 library('beanplot')
+library('stringr')
 resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"
+kdlevels = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/TargetKdLevels.txt")
+targetgenes = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/TargetSummary.txt")
 
 all.pvals <- list.files(path = resultsbin,pattern="Pvalues.txt")
 pvals <- llply(paste(resultsbin,all.pvals,sep=""), read.table)
@@ -30,7 +33,6 @@ batchers[i] = strsplit(all.pdfs[i],"_")[[1]][2]
 }
 batchers= as.factor(batchers)
 
-kdlevels = read.table("/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Annotations/TargetKdLevels.txt")
 avekds = apply(kdlevels[,2:4],1,mean)
 varkds = apply(kdlevels[,2:4],1,var)
 #Build a master list of matrices that contains all P-values, Q-values, and Log2(FC) for each knockdown.  Genes DE are coded with a 5 instead of 'NA'.
@@ -66,6 +68,20 @@ master[[3]] = master[[3]][match(master[[1]][,2],master[[3]][,2]),]
 master.overlap = rowSums(master[[2]][,4:dim(master[[2]])[2]] < 0.05)
 lessthanfive = master[[2]][which(master.overlap < 5),1]
 
+knockdowncors = matrix(NA,1,5)
+for(i in 1:dim(targetgenes)[1]){
+  inder = grep(targetgenes[i,1],kdlevels[,1])
+  indy = match(targetgenes[i,3],master[[3]][,2])
+  if(length(inder) > 0 & !is.na(indy)){
+    newline = c(as.character(targetgenes[i,1]),as.character(kdlevels[inder,1]),
+                avekds[inder],master[[3]][indy,match(kdlevels[inder,1],colnames(master[[3]]))],
+                as.numeric(counts[[match(kdlevels[inder,1],namers)]][2,2]))
+    knockdowncors = rbind(knockdowncors,newline)
+  }
+}
+knockdowncors = knockdowncors[-1,]
+knockdowncors = knockdowncors[knockdowncors[,4] < 5,]
+
 summar = matrix(NA,length(counts),3)
 for(i in 1:length(counts)){
 	summar[i,1] = namers[i]
@@ -75,28 +91,49 @@ for(i in 1:length(counts)){
 names(summar) = c("Factor","TotalProbes","SigProbes")
 write.table(summar,paste(resultsbin,"SummaryCounts.txt",sep=""),row.names=F,quote=F,sep="\t")
 
-batchcol = c("black","blue","red")[unlist(batchers)]
+batchcol = c("indianred","goldenrod","dodgerblue2")[unlist(batchers)]
 pdf(paste(resultsbin,"SummaryPlots.pdf",sep=""),height=11,width=8.5)
 barplot(as.numeric(summar[,2]),names.arg=names.clean,las=2,cex.names=0.8,col=batchcol,ylim=c(0,(max(as.numeric(summar[,2]))+3000)),
     main="Total No. of Probes",ylab="No. Probes",legend.text=c("Batch 1","Batch 2","Batch 3"),
-    args.legend = list(fill=c("black","red","blue")))
+    args.legend = list(fill=c("indianred","dodgerblue2","goldenrod")))
 #legend(x="topright",legend=c("Batch 1", "Batch 2", "Batch 3"),fill=c("blue","red","black"))
 degenes = as.numeric(summar[,3])
 inder = order(degenes)
 bp = barplot(degenes[inder],horiz=T,names.arg=names.clean[inder],xlim=c(0,(max(degenes)+3000)),
     las=2,cex.names=0.8,col=batchcol[inder],main="No. DE Genes",xlab="No. Genes",
-    legend.text=c("Batch 1","Batch 2","Batch 3"),args.legend = list(fill=c("blue","red","black")))
+    legend.text=c("Batch 1","Batch 2","Batch 3"),args.legend = list(fill=c("goldenrod","dodgerblue2","indianred")))
 text(x=degenes[inder],y=bp,labels=degenes[inder],cex=0.8,pos=4)
 bp2 = barplot(degenes[inder],horiz=T,names.arg=names.clean[inder],xlim=c(0,(max(degenes)+1100)),
               las=1,cex.names=0.8,col="indianred",main="No. DE Genes",xlab="No. Genes",)
 text(x=degenes[inder],y=bp2,labels=degenes[inder],cex=0.8,pos=4)
-par(mfrow=c(1,1))
-par(oma=c(4,4,4,4) + 0.1)
-par(mgp=c(3,1,0))
-par(mar=c(5, 5, 4, 2) + 0.1)
-plot(avekds,log10(as.numeric(summar[,3])),pch=20,col="dodgerblue2",
-     cex=1.5,las=1,xlab="Knockdown Level",ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5)
-x = round(cor(avekds,log10(as.numeric(summar[,3])))^2,3)
+bp3 = barplot(degenes[inder],ylim=c(0,(max(degenes)+1100)),las=1,cex.names=0.8,
+              col="indianred",main="No. DE Genes",xlab="No. Genes",)
+par(mfrow=c(2,2))
+# par(oma=c(4,4,4,4) + 0.1)
+# par(mgp=c(3,1,0))
+# par(mar=c(5, 5, 4, 2) + 0.1)
+a = avekds
+b = log10(as.numeric(summar[,3]))
+plot(a,b,pch=20,col="dodgerblue2",cex=2,las=1,xlab="%Knockdown (qPCR)",
+     ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5,main=cor.test(a,b)$p.value)
+x = round(cor(a,b)^2,3)
+legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
+a = varkds
+plot(a,b,pch=20,col="mediumseagreen",cex=2,las=1,xlab="%Knockdown (qPCR) Variance",
+     ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5,main=cor.test(a,b)$p.value)
+x = round(cor(a,b)^2,3)
+legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
+a = (1-(2^as.numeric(knockdowncors[,4])))
+b = log10(as.numeric(knockdowncors[,5]))
+plot(a,b,pch=20,col="goldenrod",cex=2,las=1,xlab="%Knockdown (Microarray)",
+     ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5,main=cor.test(a,b)$p.value)
+x = round(cor(a,b)^2,3)
+legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
+a = as.numeric(knockdowncors[,3])
+b = (1-(2^as.numeric(knockdowncors[,4])))
+plot(a,b,pch=20,col="mediumorchid3",cex=2,las=1,xlab="%Knockdown (qPCR)",
+     ylab="%Knockdown (Microarray)",cex.lab=1.5,cex.axis=1.5,main=cor.test(a,b)$p.value)
+x = round(cor(a,b)^2,3)
 legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
 dev.off()
 
@@ -263,4 +300,10 @@ heatmap.2(results.heat.m,trace="none",col=ColorRamp,ColSideColors=batchcol,distf
 #heatmap.2(results.heat.ma,trace="none",col=ColorRamp,ColSideColors=batchcol,main="FET O/L only <5 Factors")
 heatmap.2(binary.phi,trace="none",col=mypalette(20),ColSideColors=batchcol2,main="Phi Coefficients (Shared DE)",
           distfun=function(x) as.dist(1-abs(x)))
+dev.off()
+
+pdf(paste(resultsbin,"FigS6.pdf",sep=""),height=5.5,width=8.5)
+barplot(as.numeric(summar[,2]),names.arg=names.clean,las=2,cex.names=0.8,col=batchcol,ylim=c(0,(max(as.numeric(summar[,2]))+3000)),
+        main="Summary of No. Genes Expressed",ylab="No. Genes Expressed",legend.text=c("Batch 1","Batch 2","Batch 3"),
+        args.legend = list(fill=c("indianred","dodgerblue2","goldenrod")))
 dev.off()

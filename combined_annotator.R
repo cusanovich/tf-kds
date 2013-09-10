@@ -1,12 +1,12 @@
 library('plyr')
 library('stringr')
 library('beanplot')
-library('vioplot')
+#library('vioplot')
 source('./config.R')
 
 outdir = "/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Results/"
-grepbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/NoProm/"
-pdfout = paste0(outdir,windowname,"_noprom_NumTFsBindingDEGenes.pdf")
+grepbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/GenomeAnnotations/Grepers/Union/"
+pdfout = paste0(outdir,windowname,"_union_NumTFsBindingDEGenes.pdf")
 factors = as.matrix(read.table(factored))
 resultsmatrix = as.matrix(read.table(bindingmatrix,sep="\t"))
 resultsmatrix = resultsmatrix[which(rowSums(resultsmatrix) > 0),]
@@ -99,24 +99,36 @@ for(i in 4:dim(master[[2]])[2]){
   bound.de[[length(bound.de)+1]] = currresultsmatrix[match(winnerbound,rownames(currresultsmatrix)),matrixcol]
   bound[[length(bound)+1]] = currresultsmatrix[match(justbound,rownames(currresultsmatrix)),matrixcol]
   bound.bound[[length(bound.bound)+1]] = currresultsmatrix[match(justbound,rownames(currresultsmatrix)),matrixcol]
-  write.table(paste(winnerbound,collapse="|"),
-              paste0(grepbin,windowname,"/",currgene,".DEandBound.txt"),row.names=F,
-              col.names=F,quote=F)
-  write.table(paste(justbound,collapse="|"),
-              paste0(grepbin,windowname,"/",currgene,".Bound.txt"),row.names=F,col.names=F,
-              quote=F)
-  write.table(paste(downwinnerbound,collapse="|"),
-              paste0(grepbin,windowname,"/",currgene,".DEandBoundPlus.txt"),row.names=F,
-              col.names=F,quote=F)
-  write.table(paste(justdownbound,collapse="|"),
-              paste0(grepbin,windowname,"/",currgene,".BoundPlus.txt"),row.names=F,
-              col.names=F,quote=F)
-  write.table(paste(colnames(currresultsmatrix)[matrixcol],collapse="|"),
-              paste0(grepbin,windowname,"/",currgene,".BindingTF.txt"),row.names=F,
-              col.names=F,quote=F)
-  write.table(paste(colnames(currresultsmatrix)[downstreamcol],collapse="|"),
-              paste0(grepbin,windowname,"/",currgene,".DownstreamTFs.txt"),row.names=F,
-              col.names=F,quote=F)
+  if(length(winnerbound) > 0){
+    write.table(paste(winnerbound,collapse="|"),
+                paste0(grepbin,windowname,"/",currgene,".DEandBound.txt"),
+                row.names=F,col.names=F,quote=F)
+  }
+  if(length(justbound) > 0){
+    write.table(paste(justbound,collapse="|"),
+                paste0(grepbin,windowname,"/",currgene,".Bound.txt"),
+                row.names=F,col.names=F,quote=F)
+  }
+  if(length(downwinnerbound) > 0){
+    write.table(paste(downwinnerbound,collapse="|"),
+                paste0(grepbin,windowname,"/",currgene,".DEandBoundPlus.txt"),
+                row.names=F,col.names=F,quote=F)
+  }
+  if(length(justdownbound) > 0){
+    write.table(paste(justdownbound,collapse="|"),
+                paste0(grepbin,windowname,"/",currgene,".BoundPlus.txt"),
+                row.names=F,col.names=F,quote=F)
+  }
+  if(length(matrixcol) > 0){
+    write.table(paste(colnames(currresultsmatrix)[matrixcol],collapse="|"),
+                paste0(grepbin,windowname,"/",currgene,".BindingTF.txt"),
+                row.names=F,col.names=F,quote=F)
+  }
+  if(length(downstreamcol) > 0){
+    write.table(paste(colnames(currresultsmatrix)[downstreamcol],collapse="|"),
+                paste0(grepbin,windowname,"/",currgene,".DownstreamTFs.txt"),
+                row.names=F,col.names=F,quote=F)
+  }
   if(length(boundgenes) < 1){
     bound.t = c(bound.t,NA)
     next
@@ -167,9 +179,9 @@ boxplot(unlist(bound.de),unlist(bound.bound),na.rm=T,log="y",outline=F,
         col=c("indianred","dodgerblue2"),las=1,ylab="No. of Binding Events",
         main=paste0("Kd Binding Only\nP-value = ",format(u.bound)),
         names=c("DE","Bound Only"),notch=T,boxlwd=3,medlwd=4,cex.lab=1.5)
-plot(seq(0,2,length.out=6),
-     seq(0,max(c(log10(unlist(bound.de)),log10(unlist(bound.bound)))),length.out=6),
-     cex.lab=1.5,type="n",xlab="",ylab="Log10(No. of Binding Events)",las=1)
+#plot(seq(0,2,length.out=6),
+#     seq(0,max(c(log10(unlist(bound.de)),log10(unlist(bound.bound)))),length.out=6),
+#     cex.lab=1.5,type="n",xlab="",ylab="Log10(No. of Binding Events)",las=1)
 #vioplot(log10(unlist(bound.bound)), horizontal=FALSE, at=1.5,col="dodgerblue2",add=T)
 #vioplot(log10(unlist(bound.de)), horizontal=FALSE, at=0.5,col="indianred",add=T)
 print(length(unlist(bound.bound)))

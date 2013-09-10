@@ -143,54 +143,54 @@ m = m[probe.ind]
 tfprobes = which(genes[probe.ind,2] == Args[1])
 
 # Calculate stats for QQplot
-obsp <- -log10(plrt)
-N <- length(obsp)
-null <- -log10(ppoints(N))
-MAX <- max(c(obsp,null))
-c95 <- rep(0,N)
-c05 <- rep(0,N)
-for(i in 1:N){
-  c95[i] <- qbeta(0.95,i,N-i+1)
-  c05[i] <- qbeta(0.05,i,N-i+1)
-}
-xx <- c(sort(null),sort(null,decreasing=T))
-yy <- c(sort(-log10(c95)),sort(-log10(c05),decreasing=T))
+# obsp <- -log10(plrt)
+# N <- length(obsp)
+# null <- -log10(ppoints(N))
+# MAX <- max(c(obsp,null))
+# c95 <- rep(0,N)
+# c05 <- rep(0,N)
+# for(i in 1:N){
+#   c95[i] <- qbeta(0.95,i,N-i+1)
+#   c05[i] <- qbeta(0.05,i,N-i+1)
+# }
+# xx <- c(sort(null),sort(null,decreasing=T))
+# yy <- c(sort(-log10(c95)),sort(-log10(c05),decreasing=T))
 
 
 print('Making PDFs...')
 # Print Figures to PDF
-pdf(paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],"_Results.pdf",sep=""))
+pdf(paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],"pub_mavolcanoes.pdf",sep=""))
 par(mfrow=c(2,2))
 
 # Histogram of P-values
-hist(plrt,main=paste(Args[1],"\nNo. Probes = ",N),xlab="P-values")
+#hist(plrt,main=paste(Args[1],"\nNo. Probes = ",N),xlab="P-values")
 
 # QQPlot
-plot(1,1, type="n", xlim=c(0,max(null)+1),ylim=c(0,max(obsp)+1),xlab="Expected", ylab="Observed",main=Args[1])
-polygon(xx, yy, col="gray",border="gray")
-lines(null,null,col="dodgerblue2",lwd=2)
-points(sort(null),sort(obsp),pch=20,cex=0.5)
-if(length(tfprobes) > 0){
-  for(i in 1:length(tfprobes)){
-    points(sort(null)[which(sort(obsp) == obsp[tfprobes[i]])],obsp[tfprobes[i]],
-           pch=20,cex=1.2,col="indianred")
-  }
-}
+# plot(1,1, type="n", xlim=c(0,max(null)+1),ylim=c(0,max(obsp)+1),xlab="Expected", ylab="Observed",main=Args[1])
+# polygon(xx, yy, col="gray",border="gray")
+# lines(null,null,col="dodgerblue2",lwd=2)
+# points(sort(null),sort(obsp),pch=20,cex=0.5)
+# if(length(tfprobes) > 0){
+#   for(i in 1:length(tfprobes)){
+#     points(sort(null)[which(sort(obsp) == obsp[tfprobes[i]])],obsp[tfprobes[i]],
+#            pch=20,cex=1.2,col="indianred")
+#   }
+# }
 
 # MA plot
-plot(a,m,pch=20,ylim=c(min(-1,min(m)),max(1,max(m))),cex=fivecex,main=Args[1],
+plot(a,m,pch=20,ylim=c(-2,2),xlim=c(7,15),cex=fivecex,main=Args[1],
      xlab="A",ylab="M",col=fivecol)
 if(length(tfprobes) > 0){
-  points(a[tfprobes],m[tfprobes],pch=20,col="indianred",cex=1.5)
+  points(a[tfprobes],m[tfprobes],pch=20,col="indianred",cex=2)
 }
 abline(h=0,lty="dashed",lwd=2,col="dodgerblue2")
 
 # Volcano plot
-plot(m,-log10(plrt),xlim=c(min(-1,min(m)),max(1,max(m))),cex=0.5,pch=20,
+plot(m,-log10(plrt),xlim=c(-2,2),ylim=c(0,12),cex=0.5,pch=20,
      main=paste(Args[1],"\n5% FDR = ",fiveperc," probes",sep=""),
      xlab="Log2(Fold-Change)",ylab="-Log10(P-value)")
 if(length(tfprobes) > 0){
-  points(m[tfprobes],-log10(plrt[tfprobes]),pch=20,col="indianred",cex=1.5)
+  points(m[tfprobes],-log10(plrt[tfprobes]),pch=20,col="indianred",cex=2)
 }
 if(fiveperc > 0){
 #  abline(h=-log10(plrt[which(qlrt == max(qlrt[qlrt <= 0.01]))[1]]),lty="dashed",lwd=2,col="blue")
@@ -198,106 +198,106 @@ if(fiveperc > 0){
          lwd=2,col="dodgerblue2")
 }
 
-par(mfrow=c(1,1))
-heatmap.2(cor(svatable,method="spearman"),main=paste(Args[1]," QN",sep=""),
-          trace="none",distfun=function(x) as.dist(1-abs(x)))
+# par(mfrow=c(1,1))
+# heatmap.2(cor(svatable,method="spearman"),main=paste(Args[1]," QN",sep=""),
+#           trace="none",distfun=function(x) as.dist(1-abs(x)))
 dev.off()
 
 
-print('Making pngs...')
-# Print Figures to png
-png(paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],"_Results.png",
-          sep=""))
-par(mfrow=c(2,2))
-
-# Histogram of P-values
-hist(plrt,main=paste(Args[1],"\nNo. Probes = ",N),xlab="P-values")
-
-# QQPlot
-plot(1,1, type="n", xlim=c(0,max(null)+1),ylim=c(0,max(obsp)+1),xlab="Expected",
-     ylab="Observed",main=Args[1])
-polygon(xx, yy, col="gray",border="gray")
-lines(null,null,col="dodgerblue2",lwd=2)
-points(sort(null),sort(obsp),pch=20,cex=0.5)
-if(length(tfprobes) > 0){
-  for(i in 1:length(tfprobes)){
-    points(sort(null)[which(sort(obsp) == obsp[tfprobes[i]])],obsp[tfprobes[i]],
-           pch=20,cex=1.2,col="indianred")
-  }
-}
-
-# MA plot
-plot(a,m,pch=20,ylim=c(min(-1,min(m)),max(1,max(m))),cex=fivecex,main=Args[1],xlab="A",
-     ylab="M",col=fivecol)
-if(length(tfprobes) > 0){
-  points(a[tfprobes],m[tfprobes],pch=20,col="indianred",cex=1.5)
-}
-abline(h=0,lty="dashed",lwd=2,col="dodgerblue2")
-
-# Volcano plot
-plot(m,-log10(plrt),xlim=c(min(-1,min(m)),max(1,max(m))),cex=0.5,pch=20,
-     main=paste(Args[1],"\n5% FDR = ",fiveperc," probes",sep=""),
-     xlab="Log2(Fold-Change)",ylab="-Log10(P-value)")
-if(length(tfprobes) > 0){
-  points(m[tfprobes],-log10(plrt[tfprobes]),pch=20,col="indianred",cex=1.5)
-}
-if(fiveperc > 0){
-#  abline(h=-log10(plrt[which(qlrt == max(qlrt[qlrt <= 0.01]))[1]]),lty="dashed",lwd=2,col="blue")
-  abline(h=-log10(plrt[which(qlrt == max(qlrt[qlrt <= 0.05]))[1]]),lty="dashed",
-         lwd=2,col="dodgerblue2")
-}
-dev.off()
-
-
-
-print('Writing results...')
-likes = cbind(probeorder,data.frame(lnresults[,1]))
-likes = cbind(likes, nullresults[,1])
-names(likes) = c("Probe","LogLik","nullLogLik")
-write.table(likes,paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],
-                        "_logLiks.txt",sep=""))
-
-
-p.ind = order(plrt)
-results = cbind(data.frame(plrt[p.ind]),qlrt[p.ind])
-results = cbind(results,m[p.ind])
-results = cbind(results,probeorder[p.ind])
-results = cbind(results,genes[probe.ind[p.ind],])
-names(results) = c("Pvalue","Qvalue","Log2FC","ProbeID","ENSGID","Symbol")
-write.table(results,paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],
-                          "_Pvalues.txt",sep=""))
-
-counters = cbind(c("TotalProbes","0.05FDR"),c(N,fiveperc))
-write.table(counters,paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],
-                           "_counts.txt",sep=""),col.names=F,row.names=F,quote=F,
-            sep="\t")
-
-print('Running GO Analysis...')
-genes4GO = results$ENSGID
-siggenes = unique(genes4GO[1:fiveperc])
-universe = rep(0,times=length(unique(genes4GO)))
-universe[1:length(siggenes)] = 1
-universe = as.factor(universe)
-names(universe) = unique(genes4GO)
-
-print('MF Categories first...')
-GOdataMF <- new("topGOdata", ontology = "MF", allGenes=universe, geneSel=siggenes,nodeSize = 5,
-              annot = annFUN.org,mapping = "org.Hs.eg",ID = "ensembl")
-resultFisherMF <- runTest(GOdataMF, algorithm = "classic", statistic = "fisher")
-allResMF <- GenTable(GOdataMF, classicFisher = resultFisherMF,orderBy = "classicFisher", ranksOf = "classicFisher", topNodes = length(score(resultFisherMF)))
-
-print('Then BP categories...')
-GOdataBP <- new("topGOdata", ontology = "BP", allGenes=universe, geneSel=siggenes,nodeSize = 5,
-              annot = annFUN.org,mapping = "org.Hs.eg",ID = "ensembl")
-resultFisherBP <- runTest(GOdataBP, algorithm = "classic", statistic = "fisher")
-allResBP <- GenTable(GOdataBP, classicFisher = resultFisherBP,orderBy = "classicFisher", ranksOf = "classicFisher", topNodes = length(score(resultFisherBP)))
-
-allRes = rbind(allResMF,allResBP)
-allRes.e = allRes[which(allRes$Significant > 0),]
-pvals = allRes.e$classicFisher
-allRes.e$AdjustedP = p.adjust(pvals,method="BH")
-allRes.clean = allRes.e[which(allRes.e$Significant > 1),]
-allRes.o = allRes.clean[order(allRes.clean$AdjustedP,allRes.clean$classicFisher,allRes.clean$Significant,allRes.clean$Term),]
-if(dim(allRes.o)[1] == 0){allRes.o = "Wha-wha!  You lose!"}
-write.table(allRes.o,paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],"_GOResults.txt",sep=""))
-print('Done.')
+# print('Making pngs...')
+# # Print Figures to png
+# png(paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],"_Results.png",
+#           sep=""))
+# par(mfrow=c(2,2))
+# 
+# # Histogram of P-values
+# hist(plrt,main=paste(Args[1],"\nNo. Probes = ",N),xlab="P-values")
+# 
+# # QQPlot
+# plot(1,1, type="n", xlim=c(0,max(null)+1),ylim=c(0,max(obsp)+1),xlab="Expected",
+#      ylab="Observed",main=Args[1])
+# polygon(xx, yy, col="gray",border="gray")
+# lines(null,null,col="dodgerblue2",lwd=2)
+# points(sort(null),sort(obsp),pch=20,cex=0.5)
+# if(length(tfprobes) > 0){
+#   for(i in 1:length(tfprobes)){
+#     points(sort(null)[which(sort(obsp) == obsp[tfprobes[i]])],obsp[tfprobes[i]],
+#            pch=20,cex=1.2,col="indianred")
+#   }
+# }
+# 
+# # MA plot
+# plot(a,m,pch=20,ylim=c(min(-1,min(m)),max(1,max(m))),cex=fivecex,main=Args[1],xlab="A",
+#      ylab="M",col=fivecol)
+# if(length(tfprobes) > 0){
+#   points(a[tfprobes],m[tfprobes],pch=20,col="indianred",cex=1.5)
+# }
+# abline(h=0,lty="dashed",lwd=2,col="dodgerblue2")
+# 
+# # Volcano plot
+# plot(m,-log10(plrt),xlim=c(min(-1,min(m)),max(1,max(m))),cex=0.5,pch=20,
+#      main=paste(Args[1],"\n5% FDR = ",fiveperc," probes",sep=""),
+#      xlab="Log2(Fold-Change)",ylab="-Log10(P-value)")
+# if(length(tfprobes) > 0){
+#   points(m[tfprobes],-log10(plrt[tfprobes]),pch=20,col="indianred",cex=1.5)
+# }
+# if(fiveperc > 0){
+# #  abline(h=-log10(plrt[which(qlrt == max(qlrt[qlrt <= 0.01]))[1]]),lty="dashed",lwd=2,col="blue")
+#   abline(h=-log10(plrt[which(qlrt == max(qlrt[qlrt <= 0.05]))[1]]),lty="dashed",
+#          lwd=2,col="dodgerblue2")
+# }
+# dev.off()
+# 
+# 
+# 
+# print('Writing results...')
+# likes = cbind(probeorder,data.frame(lnresults[,1]))
+# likes = cbind(likes, nullresults[,1])
+# names(likes) = c("Probe","LogLik","nullLogLik")
+# write.table(likes,paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],
+#                         "_logLiks.txt",sep=""))
+# 
+# 
+# p.ind = order(plrt)
+# results = cbind(data.frame(plrt[p.ind]),qlrt[p.ind])
+# results = cbind(results,m[p.ind])
+# results = cbind(results,probeorder[p.ind])
+# results = cbind(results,genes[probe.ind[p.ind],])
+# names(results) = c("Pvalue","Qvalue","Log2FC","ProbeID","ENSGID","Symbol")
+# write.table(results,paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],
+#                           "_Pvalues.txt",sep=""))
+# 
+# counters = cbind(c("TotalProbes","0.05FDR"),c(N,fiveperc))
+# write.table(counters,paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],
+#                            "_counts.txt",sep=""),col.names=F,row.names=F,quote=F,
+#             sep="\t")
+# 
+# print('Running GO Analysis...')
+# genes4GO = results$ENSGID
+# siggenes = unique(genes4GO[1:fiveperc])
+# universe = rep(0,times=length(unique(genes4GO)))
+# universe[1:length(siggenes)] = 1
+# universe = as.factor(universe)
+# names(universe) = unique(genes4GO)
+# 
+# print('MF Categories first...')
+# GOdataMF <- new("topGOdata", ontology = "MF", allGenes=universe, geneSel=siggenes,nodeSize = 5,
+#               annot = annFUN.org,mapping = "org.Hs.eg",ID = "ensembl")
+# resultFisherMF <- runTest(GOdataMF, algorithm = "classic", statistic = "fisher")
+# allResMF <- GenTable(GOdataMF, classicFisher = resultFisherMF,orderBy = "classicFisher", ranksOf = "classicFisher", topNodes = length(score(resultFisherMF)))
+# 
+# print('Then BP categories...')
+# GOdataBP <- new("topGOdata", ontology = "BP", allGenes=universe, geneSel=siggenes,nodeSize = 5,
+#               annot = annFUN.org,mapping = "org.Hs.eg",ID = "ensembl")
+# resultFisherBP <- runTest(GOdataBP, algorithm = "classic", statistic = "fisher")
+# allResBP <- GenTable(GOdataBP, classicFisher = resultFisherBP,orderBy = "classicFisher", ranksOf = "classicFisher", topNodes = length(score(resultFisherBP)))
+# 
+# allRes = rbind(allResMF,allResBP)
+# allRes.e = allRes[which(allRes$Significant > 0),]
+# pvals = allRes.e$classicFisher
+# allRes.e$AdjustedP = p.adjust(pvals,method="BH")
+# allRes.clean = allRes.e[which(allRes.e$Significant > 1),]
+# allRes.o = allRes.clean[order(allRes.clean$AdjustedP,allRes.clean$classicFisher,allRes.clean$Significant,allRes.clean$Term),]
+# if(dim(allRes.o)[1] == 0){allRes.o = "Wha-wha!  You lose!"}
+# write.table(allRes.o,paste(resultsbin,Args[1],"_",strsplit(Args[2],split="_")[[1]][2],"_GOResults.txt",sep=""))
+# print('Done.')

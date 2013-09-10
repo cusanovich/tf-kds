@@ -7,3 +7,5 @@
 ._chromatin_factormatrix2results.R
 ._chromatin_resultsbed2factormatrix.py
 kdfunc.pyc
+*.pdf
+output/
