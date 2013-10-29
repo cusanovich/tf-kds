@@ -74,17 +74,32 @@ for(i in 1:dim(newmatrix)[2]){
 }
 
 degenes = union(namers.clean,degenes)
+egenes = union(namers.clean,egenes)
+length(intersect(degenes,colnames(newmatrix)))
+length(intersect(egenes,colnames(newmatrix)))
 indy = match(degenes,colnames(newmatrix))
 indy = indy[!is.na(indy)]
 newestermatrix = newmatrix[,indy]
+avebind = c()
+for(i in 1:dim(newestermatrix)[2]){
+  currcol = newestermatrix[,i]
+  avebind[i] = mean(currcol[currcol>0])
+}
 
+dim(newestermatrix)
 range(colSums(newestermatrix>0))
 median(colSums(newestermatrix>0))
-pdf(paste0(outbin,"FigS7.pdf"),height=10,width=5)
-par(mfrow=c(2,1))
-hist(colSums(newestermatrix>0),col="dodgerblue2",las=1,main="A. Number of Genes Bound by Each Factor",xlab="Number of Genes")
-hist(rowSums(newestermatrix>0),col="dodgerblue2",las=1,main="B. Number of Factors Bound by Each Gene",xlab="Number of Factors")
-dev.off()
 length(which(rowSums(newestermatrix)>0)) - dim(newmatrix)[1]
 range(rowSums(newestermatrix[rowSums(newestermatrix)>0,]>0))
 median(rowSums(newestermatrix[rowSums(newestermatrix)>0,]>0))
+pdf(paste0(outbin,"FigS7.pdf"),height=10,width=5)
+par(mfrow=c(2,1))
+hist(colSums(newestermatrix>0),col="dodgerblue2",las=1,
+     main="A. Number of Genes Bound by Each Factor",xlab="Number of Genes")
+hist(rowSums(newestermatrix>0),col="dodgerblue2",las=1,
+     main="B. Number of Factors Bound by Each Gene",xlab="Number of Factors")
+hist(avebind,col="dodgerblue2",las=1,main = "Number of Binding Events/Bound Gene")
+plot(avebind,colSums(newestermatrix>0),col="dodgerblue2",las=1,pch=20,cex=1.5,
+     main = "Binding/Gene vs. No. Genes Bound",xlab="Binding/Bound Gene",
+     ylab="No. Genes Bound")
+dev.off()

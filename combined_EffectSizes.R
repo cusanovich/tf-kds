@@ -58,6 +58,7 @@ denom = c()
 for(i in 4:dim(master[[3]])[2]){
   matchgene = strsplit(names(master[[2]])[i],"_")[[1]][1]
   commongenes = intersect(master[[2]][which(master[[2]][,i]< 5),2],rownames(resultsmatrix))
+  commongenes = setdiff(commongenes,master[[2]][match(matchgene,master[[2]][,3]),2])
   commonind = match(commongenes,master[[2]][,2])
   currmaster = list()
   currmaster[[1]] = master[[1]][commonind,]
@@ -105,9 +106,18 @@ plot(densedirs[[1]],xlab="Log2(Fold-Change)",ylim=c(0,4.5),las=1,lwd=2,cex.lab=2
 for(i in 2:length(densedirs)){
   lines(densedirs[[i]],col="dodgerblue2",lwd=2)
 }
-indish = order(colSums(master[[2]] < 0.05))
-indish = indish[4:62]
-boxplot(effects[indish],outline=F,col="indianred",las=2,cex.lab=2,axes=F,ylab="Log2(Fold-Change)",cex.lab=1.5)
+indish = order(colSums(master[[2]][,4:62] < 0.05))
+qers = c(quantile(unlist(effects),0.25),
+         quantile(unlist(effects),0.75))
+boxplot(effects[indish],outline=F,col="mediumorchid3",las=2,cex.lab=2,axes=F,
+        ylab="Log2(Fold-Change)",cex.lab=1.5)
+polygon(c(-10,100,100,-10),c(qers[1],qers[1],qers[2],qers[2]),col="gray",
+        border="gray")
+boxplot(effects[indish],outline=F,col="mediumorchid3",las=2,cex.lab=2,axes=F,add=T)
+axis(1, at = 1:59, labels = names.clean[indish],las=2,cex.axis=0.4)
+axis(2,las=2)
+box()
+beanplot(effects[indish],ylab="Log2(Fold-Change)",names=names.clean,col="indianred",las=2,log="",cex.lab=1.5,beanlines="median",what=c(1,1,1,0),overallline="median",axes=F)
 axis(1, at = 1:59, labels = names.clean[indish],las=2,cex.axis=0.4)
 axis(2,las=2)
 box()
@@ -125,18 +135,28 @@ boxplot(ups,notch=T,outpch=20,boxlwd=3,medlwd=4,add=T,axes=F,col="indianred",out
 stripchart(ups,vertical=T,cex=1.5,pch=20,col="indianred",method="jitter",las=1,ylab="Fraction of Genes Repressed")
 abline(h=0.5,lty=3)
 lines(c(0.9,1.1),c(median(ups),median(ups)),lwd=4)
+kernels = c("gaussian", "epanechnikov", "rectangular",
+           "triangular", "biweight",
+           "cosine", "optcosine")
+adjusters = c(1)
 plot(seq(-.5,.5,length.out=6),seq(0,4.5,length.out=6),cex.lab=1.5,type="n",xlab="Log2(Fold-Change)",ylab="Density",las=1)
 abline(v=0,lty="dashed")
 polygon(density(unlist(directions)),col="dodgerblue2")
 legend("topright","Repressed Genes",bty="n")
 legend("topleft","Enhanced Genes",bty="n")
-
 boxplot(boundups,notch=T,outpch=20,boxlwd=3,medlwd=4,las=1,cex=2,cex.lab=1.5,col="indianred",outcol="indianred",ylab="Fraction of Direct Targets Repressed")
 abline(h=0.5,lty=3)
 boxplot(boundups,notch=T,outpch=20,boxlwd=3,medlwd=4,add=T,axes=F,col="indianred",outcol="indianred")
-plot(seq(-.5,.5,length.out=6),seq(0,4.5,length.out=6),cex.lab=1.5,type="n",xlab="Log2(Fold-Change) of Direct Targets",ylab="Density",las=1)
+for(i in 1:length(adjusters)){
+  plot(seq(-2,2,length.out=6),seq(0,4.5,length.out=6),cex.lab=1.5,type="n",xlab="Log2(Fold-Change) of Direct Targets",ylab="Density",las=1)
+  abline(v=0,lty="dashed")
+  polygon(density(unlist(bounddirections),adjust=adjusters[i]),col="dodgerblue2")
+  legend("topright","Repressed Direct Targets",bty="n")
+  legend("topleft","Enhanced Direct Targets",bty="n")
+}
+hist(unlist(bounddirections),xlim=c(-2,2),col="dodgerblue2",breaks=75,las=1,xlab="Log2(Fold-Change) of Direct Targets")
+box()
 abline(v=0,lty="dashed")
-polygon(density(unlist(bounddirections)),col="dodgerblue2")
 legend("topright","Repressed Direct Targets",bty="n")
 legend("topleft","Enhanced Direct Targets",bty="n")
 par(oma=c(0,8,0,8) + 0.1)
@@ -144,6 +164,9 @@ stripchart(boundups,vertical=T,cex=2,pch=20,col="indianred",method="jitter",las=
 abline(h=0.5,lty=2)
 lines(c(0.9,1.1),c(median(boundups),median(boundups)),lwd=3)
 dev.off()
+directioner = cbind(names(bounddirections),frac,boundups)
+write.table(directioner,paste0(resultsbin,windowname,"directions.txt"),row.names=F,
+            col.names=F, quote=F, sep="\t")
 print(names(bounddirections)[which(boundups == min(boundups))])
 print(min(boundups))
 print(names(bounddirections)[which(boundups == max(boundups))])

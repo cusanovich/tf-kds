@@ -6,7 +6,7 @@ sys.path.insert(0,'/mnt/lustre/home/cusanovich/Programs/lib/python2.6/site-packa
 from pybedtools import BedTool, featurefuncs
 from kdfunc import pwmdicter
 
-windowsize = 10000
+windowsize = 1000
 windowname = str(windowsize/1000) + 'kb'
 outdir = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/indiv_factor_beds/'
 outboundonly = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowname + '_combined_midpoint_BoundOnly.bed'
@@ -15,8 +15,8 @@ newout = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results'
 chiped = '/mnt/lustre/home/cusanovich/Kd_Arrays/EncodeChipSeq/sorted_EncodeChIP_Uniform_Combined.bed'
 jacked = '/mnt/lustre/home/cusanovich/centipede/hg19_jack_centipede_sorted_pwms_clean.bed'
 tsss = '/mnt/lustre/home/cusanovich/Kd_Arrays/Centipede/Annotation/HT12ensemblTSScombinedsorted.bed'
-outfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results10kb_combined_midpoint_new.bed'
-outsortfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results10kb_combined_midpoint_new_sorted.bed'
+outfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowname + '_combined_midpoint_new.bed'
+outsortfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/results' + windowname + '_combined_midpoint_new_sorted.bed'
 newcombofile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint_new.bed'
 newcombosortedfile = '/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Binding/combinedChipandCenti_midpoint_new_sorted.bed'
 pwms = open('/mnt/lustre/home/cusanovich/Kd_Arrays/CombinedBinding/Annotations/allbinding_list.txt','r')
@@ -55,9 +55,9 @@ chiper = BedTool(chiped)
 print "Combining binding files..."
 comber = chiper.cat(jacker,force_truncate=False,postmerge=False).moveto('./combtemp.bed')
 
-print "Generating oldstyle bed file..."
-oldstyle = comber.each(featurefuncs.midpoint)
-oldstyle2 = bedmaker(oldstyle,tssbed,oldout)
+#print "Generating oldstyle bed file..."
+#oldstyle = comber.each(featurefuncs.midpoint)
+#oldstyle2 = bedmaker(oldstyle,tssbed,oldout)
 
 print "Generating newstyle bed files..."
 for factor in sorted(pwmlist.keys()):

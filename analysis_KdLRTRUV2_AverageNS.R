@@ -5,6 +5,7 @@ library('gplots')
 Args <- commandArgs(TRUE)
 #Args = c("EP300","expr_secondbatch_a3ruv2k8")
 #Args = c("HCST","expr_firstbatch_ruv2")
+#Args = c("IRF4","expr_oldbatch_ruv2")
 print(Args[1])
 print(Args[2])
 resultsbin = "/mnt/lustre/home/cusanovich/Kd_Arrays/Analysis/Results/RUV2_NSAveraged_alt_Results/"

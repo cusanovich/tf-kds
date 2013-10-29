@@ -303,18 +303,12 @@ for(i in 1:5){
     }
     pushViewport(vp)
         if(j < 6){
-#      stripchart(pc.ruv$x[,i] ~ covariates_pc[,interestingpcs[j]],vertical=T,
-#                 method="jitter",col=nfdate.col,cex=1.5,pch=20,
-#                 ylab=paste0("PC",i," - ",round(summary(pc.ruv)$importance[2,i]*100,3),"% of Variance"))
       print(stripplot(pc.ruv$x[,i] ~ covariates_pc[,interestingpcs[j]],
                       jitter.data = T,col=nfdate.col,cex=1.5,pch=20,main=list(sig),
                       xlab=list(label=names(covariates_pc)[interestingpcs[j]]),
                       scales = list(x = list(cex = 0.75)),
                       ylab=list(label=paste0("PC",i," - ",round(summary(pc.ruv)$importance[2,i]*100,3),"% of Variance"))),
             newpage=F)
-      if(xer%%4 == 0){
-        
-      }
     }else{
       par(new=TRUE, fig=gridFIG())
       plot(covariates_pc[,interestingpcs[j]],pc.ruv$x[,i],pch=20,cex=1.5,

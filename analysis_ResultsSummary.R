@@ -114,25 +114,33 @@ par(mfrow=c(2,2))
 # par(mar=c(5, 5, 4, 2) + 0.1)
 a = avekds
 b = log10(as.numeric(summar[,3]))
-plot(a,b,pch=20,col="dodgerblue2",cex=2,las=1,xlab="%Knockdown (qPCR)",
-     ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5,main=cor.test(a,b)$p.value)
+plot(a,b,las=1,xlab="%Knockdown (qPCR)",type="n",cex.lab=1.5,cex.axis=1.5,
+     ylab="Log10(No. Genes DE)",main=cor.test(a,b)$p.value)
+abline(lm(b ~ a),lty=2,lwd=2)
+points(a,b,pch=20,col="dodgerblue2",cex=2)
 x = round(cor(a,b)^2,3)
 legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
 a = varkds
-plot(a,b,pch=20,col="mediumseagreen",cex=2,las=1,xlab="%Knockdown (qPCR) Variance",
-     ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5,main=cor.test(a,b)$p.value)
+plot(a,b,las=1,xlab="%Knockdown (qPCR) Variance",cex.lab=1.5,cex.axis=1.5,type="n",
+     ylab="Log10(No. Genes DE)",main=cor.test(a,b)$p.value)
+abline(lm(b ~ a),lty=2,lwd=2)
+points(a,b,pch=20,col="mediumseagreen",cex=2)
 x = round(cor(a,b)^2,3)
 legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
 a = (1-(2^as.numeric(knockdowncors[,4])))
 b = log10(as.numeric(knockdowncors[,5]))
-plot(a,b,pch=20,col="goldenrod",cex=2,las=1,xlab="%Knockdown (Microarray)",
-     ylab="Log10(No. Genes DE)",cex.lab=1.5,cex.axis=1.5,main=cor.test(a,b)$p.value)
+plot(a,b,las=1,xlab="%Knockdown (Microarray)",cex.lab=1.5,cex.axis=1.5,type="n",
+     ylab="Log10(No. Genes DE)",main=cor.test(a,b)$p.value)
+abline(lm(b ~ a),lty=2,lwd=2)
+points(a,b,pch=20,col="goldenrod",cex=2)
 x = round(cor(a,b)^2,3)
 legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
 a = as.numeric(knockdowncors[,3])
 b = (1-(2^as.numeric(knockdowncors[,4])))
-plot(a,b,pch=20,col="mediumorchid3",cex=2,las=1,xlab="%Knockdown (qPCR)",
-     ylab="%Knockdown (Microarray)",cex.lab=1.5,cex.axis=1.5,main=cor.test(a,b)$p.value)
+plot(a,b,las=1,xlab="%Knockdown (qPCR)",cex.lab=1.5,cex.axis=1.5,type="n",
+     ylab="%Knockdown (Microarray)",main=cor.test(a,b)$p.value)
+abline(lm(b ~ a),lty=2,lwd=2)
+points(a,b,pch=20,col="mediumorchid3",cex=2)
 x = round(cor(a,b)^2,3)
 legend("topleft",legend=bquote(R^2 == .(x)),bty="n",cex=1.5)
 dev.off()

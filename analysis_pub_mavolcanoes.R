@@ -186,9 +186,9 @@ if(length(tfprobes) > 0){
 abline(h=0,lty="dashed",lwd=2,col="dodgerblue2")
 
 # Volcano plot
-plot(m,-log10(plrt),xlim=c(-2,2),ylim=c(0,12),cex=0.5,pch=20,
+plot(m,-log10(plrt),xlim=c(-2,2),ylim=c(0,12),cex=fivecex,pch=20,
      main=paste(Args[1],"\n5% FDR = ",fiveperc," probes",sep=""),
-     xlab="Log2(Fold-Change)",ylab="-Log10(P-value)")
+     xlab="Log2(Fold-Change)",ylab="-Log10(P-value)",col=fivecol)
 if(length(tfprobes) > 0){
   points(m[tfprobes],-log10(plrt[tfprobes]),pch=20,col="indianred",cex=2)
 }

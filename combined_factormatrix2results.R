@@ -190,9 +190,10 @@ percs = cbind(as.numeric(bindingmatrix[,4])/as.numeric(bindingmatrix[,3]),
               as.numeric(bindingmatrix[,8])/as.numeric(bindingmatrix[,4]),
               as.numeric(bindingmatrix[,11])/as.numeric(bindingmatrix[,3]),
               as.numeric(bindingmatrix[,12])/as.numeric(bindingmatrix[,11]),
-              as.numeric(bindingmatrix[,13])/as.numeric(bindingmatrix[,11]))
+              as.numeric(bindingmatrix[,13])/as.numeric(bindingmatrix[,11]),
+              as.numeric(bindingmatrix[,5])/as.numeric(bindingmatrix[,3]))
 colnames(percs) = c("Bound/Total","DE/Bound","RelaxedDE/Bound","BoundPlus/Total",
-                    "DEPlus/Bound","RelaxedDEPlus/Bound")
+                    "DEPlus/Bound","RelaxedDEPlus/Bound","DE/Total")
 
 write.table(bindingmatrix,paste0(outbin,outtables,"overlaptable.txt"),row.names=F,quote=F,sep="\t")
 
@@ -349,11 +350,11 @@ par(mar=c(5,5,2,2)+0.1)
 #par(mfrow=c(2,1))
 #par(mar=c(8, 8, 2, 4) + 0.1)
 #par(mgp=c(3,1.5,0))
-boxplot(percs[,4:6],ylim=c(0,1),notch=T,col=c("indianred","dodgerblue2","mediumseagreen"),
-        outpch=20,outcol=c("indianred","dodgerblue2","mediumseagreen"),
+boxplot(percs[,c(4,7,5,6)],ylim=c(0,1),notch=T,col=c("indianred","goldenrod","dodgerblue2","mediumseagreen"),
+        outpch=20,outcol=c("indianred","goldenrod","dodgerblue2","mediumseagreen"),
         ylab="Fraction",cex.lab=2,las=1,cex=2,boxlwd=3,medlwd=4,
-        names=c("Bound Genes\nAll Genes","DE Genes (FDR 0.05)\nBound Genes","DE Genes (FDR 0.20)\nBound Genes"))
-abline(v=1.5,lty="dashed")
+        names=c("Bound Genes\nAll Genes","DE Genes\nAll Genes","DE Genes (FDR 0.05)\nBound Genes","DE Genes (FDR 0.20)\nBound Genes"))
+abline(v=2.5,lty="dashed")
 plot(dtfs[,2],dtfs[,1],las=1,cex.lab=2,cex=3,
      xlab="Differentially Expressed Transcription Factors",
      ylab="Differentially Expressed Genes",pch=20,col="dodgerblue2")
@@ -399,7 +400,15 @@ boxer = cbind(as.factor(inder),
 boxplot(boxer[,2] ~ boxer[,1],notch=T,outline=F,las=1,cex=2,
         xlab="Fraction Common TFs Decile",ylab="Degree of Co-occupancy",cex.lab=2,
         col="mediumseagreen",boxlwd=3,medlwd=4)
-
+par(mfrow=c(1,2))
+#par(mar=c(8, 8, 2, 4) + 0.1)
+#par(mgp=c(3,1.5,0))
+boxplot(percs[,4],ylim=c(0,1),notch=T,col="indianred",outpch=20,outcol="indianred",
+        ylab="Fraction",cex.lab=2,las=1,cex=2,boxlwd=3,medlwd=4,names="Bound Genes\nAll Genes")
+boxplot(percs[,c(5,6)],ylim=c(0,1),notch=T,col=c("dodgerblue2","mediumseagreen"),
+        outpch=20,outcol=c("dodgerblue2","mediumseagreen"),ylab="Fraction",
+        cex.lab=2,las=1,cex=2,boxlwd=3,medlwd=4,
+        names=c("DE Genes (FDR 0.05)\nBound Genes","DE Genes (FDR 0.20)\nBound Genes"))
 #permer = c()
 #for(i in 4:dim(master[[2]])[2]){
 #  permer[i-3] = length(which(master[[2]][,i] < 5))
