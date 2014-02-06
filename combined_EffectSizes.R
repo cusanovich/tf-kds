@@ -107,6 +107,9 @@ for(i in 2:length(densedirs)){
   lines(densedirs[[i]],col="dodgerblue2",lwd=2)
 }
 indish = order(colSums(master[[2]][,4:62] < 0.05))
+inders = c(59,16,44,2,32,46,3,28,19,58,11,57,24,35,50,12,14,34,41,48,23,25,36,56,
+           10,31,49,7,26,45,40,18,9,55,4,37,29,38,53,42,5,33,54,22,8,13,47,27,1,
+           43,6,30,51,21,17,15,39,20,52)
 qers = c(quantile(unlist(effects),0.25),
          quantile(unlist(effects),0.75))
 boxplot(effects[indish],outline=F,col="mediumorchid3",las=2,cex.lab=2,axes=F,
@@ -115,6 +118,14 @@ polygon(c(-10,100,100,-10),c(qers[1],qers[1],qers[2],qers[2]),col="gray",
         border="gray")
 boxplot(effects[indish],outline=F,col="mediumorchid3",las=2,cex.lab=2,axes=F,add=T)
 axis(1, at = 1:59, labels = names.clean[indish],las=2,cex.axis=0.4)
+axis(2,las=2)
+box()
+boxplot(effects[inders],outline=F,col="dodgerblue2",las=2,cex.lab=2,axes=F,
+        ylab="Log2(Fold-Change)",cex.lab=1.5)
+polygon(c(-10,100,100,-10),c(qers[1],qers[1],qers[2],qers[2]),col="gray",
+        border="gray")
+boxplot(effects[inders],outline=F,col="dodgerblue2",las=2,cex.lab=2,axes=F,add=T)
+axis(1, at = 1:59, labels = names.clean[inders],las=2,cex.axis=0.4)
 axis(2,las=2)
 box()
 beanplot(effects[indish],ylab="Log2(Fold-Change)",names=names.clean,col="indianred",las=2,log="",cex.lab=1.5,beanlines="median",what=c(1,1,1,0),overallline="median",axes=F)

@@ -70,13 +70,16 @@ for(i in 1:dim(newmatrix)[2]){
     newqvals = qvals[!is.na(qvals[,currcol]),c(2,currcol)]
     newestmatrix = newmatrix[!is.na(qvals[,currcol]),i]
     currdeb = newqvals[newqvals[,2] < 0.05 & newestmatrix > 0,1]
-    currb = newqvals[newqvals[,2] >= 0.05 & newestmatrix > 0,1]
+    #currb = newqvals[newqvals[,2] >= 0.05 & newestmatrix > 0,1]
+    currb = newqvals[newestmatrix > 0,1]
     curru = newqvals[newqvals[,2] >= 0.05 & newestmatrix == 0,1]
+    curru = newqvals[newestmatrix == 0,1]
     deandbound = union(deandbound, currdeb)
     bound = union(bound, currb)
     unbound = union(unbound, curru)
   }
+  realbound = setdiff(bound,deandbound)
   write.table(paste(deandbound,collapse="|"),paste0(outbin,colnames(newmatrix)[i],".DEandBound.txt"),row.names=F,col.names=F,quote=F)
-  write.table(paste(bound,collapse="|"),paste0(outbin,colnames(newmatrix)[i],".Bound.txt"),row.names=F,col.names=F,quote=F)
+  write.table(paste(realbound,collapse="|"),paste0(outbin,colnames(newmatrix)[i],".Bound.txt"),row.names=F,col.names=F,quote=F)
   write.table(paste(unbound,collapse="|"),paste0(outbin,colnames(newmatrix)[i],".Unbound.txt"),row.names=F,col.names=F,quote=F)
 }

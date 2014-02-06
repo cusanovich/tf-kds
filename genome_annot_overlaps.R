@@ -4,8 +4,6 @@ source('./config.R')
 
 centispec = c("GrepPhastCons","GrepPosterior","GrepPWM")
 coloring = list(c("mediumorchid3","goldenrod"),c("indianred","dodgerblue2"))
-#grandpath = paste0("~/home/Kd_Arrays/GenomeAnnotations/GrepBeds/",windowname,"/")
-#masterpath = "~/home/Kd_Arrays/GenomeAnnotations/"
 tests = list.files(grandpath)
 
 pdf(paste0(masterpath,windowname,"_union_Annotations.pdf"))
@@ -14,13 +12,8 @@ par(mar=c(4,4,6,4)+0.1)
 for(i in 1:length(tests)){
   currtest = tests[i]
   print(currtest)
-  if(currtest == "GrepChipvCenti"){next}
+  #if(currtest == "GrepChipvCenti"){next}
   currpath = paste0(grandpath,currtest)
-#  currmaster = read.table(paste0(masterpath,"Perms/",windowname,"/",currtest,".master.perms"))
-#  mastermedstf = apply(currmaster[grep("TF",currmaster[,2]),3:dim(currmaster)[2]],2,median)
-#  mastermedsdown = apply(currmaster[grep("Downstream",currmaster[,2]),3:dim(currmaster)[2]],2,median)
-#  altmastertf = read.table(paste0(masterpath,"Perms/",windowname,"/",currtest,".alt.tf.perms"))
-#  altmasterdown = read.table(paste0(masterpath,"Perms/",windowname,"/",currtest,".alt.down.perms"))
   currtfboundfiles = list.files(path=currpath,pattern = ".tf.bound.")
   currtfdefiles = list.files(path=currpath,pattern = ".tf.debound.")
   currdownboundfiles = list.files(path=currpath,pattern = ".down.boundplus.")
@@ -58,10 +51,6 @@ for(i in 1:length(tests)){
   downmeds = median(unlist(currdowndes),na.rm = T) - median(unlist(currdownbounds),na.rm = T)
   tfdir = ifelse(tfmeds > 0,"DE > Bound","DE < Bound")
   downdir = ifelse(downmeds > 0,"DE > Bound","DE < Bound")
-#  tfempiricalp = length(which(abs(mastermedstf-mean(mastermedstf)) > abs(tfmed - mean(mastermedstf))))/1000
-#  downempiricalp = length(which(abs(mastermedsdown-mean(mastermedsdown)) > abs(downmed - mean(mastermedsdown))))/1000
-#  alttfempiricalp = length(which(abs(altmastertf[,1]-mean(altmastertf[,1])) > abs(tfmed - mean(altmastertf[,1]))))/1000
-#  altdownempiricalp = length(which(abs(altmasterdown[,1]-mean(altmasterdown[,1])) > abs(downmed - mean(altmasterdown[,1]))))/1000
   if(currtest == "GrepDistance"){
     tfmed = median(unlist(llply(currtfdes,function(x){median(x[,1],na.rm=T)})))
     downmed = median(unlist(llply(currdowndes,function(x){median(x[,1],na.rm=T)})))
@@ -69,10 +58,6 @@ for(i in 1:length(tests)){
     altdownmed = median(unlist(currdowndes),na.rm = T)
     tfmeds = median(abs(unlist(currtfdes)),na.rm = T) - median(abs(unlist(currtfbounds)),na.rm = T)
     downmeds = median(abs(unlist(currdowndes)),na.rm = T) - median(abs(unlist(currdownbounds)),na.rm = T)
-#    tfempiricalp = length(which(abs(mastermedstf-mean(mastermedstf)) > abs(tfmed - mean(mastermedstf))))/1000
-#    downempiricalp = length(which(abs(mastermedsdown-mean(mastermedsdown)) > abs(downmed - mean(mastermedsdown))))/1000
-#    alttfempiricalp = length(which(abs(altmastertf[,1]-mean(altmastertf[,1])) > abs(alttfmed - mean(altmastertf[,1]))))/1000
-#    altdownempiricalp = length(which(abs(altmasterdown[,1]-mean(altmasterdown[,1])) > abs(altdownmed - mean(altmasterdown[,1]))))/1000
     tfdir = ifelse(tfmeds > 0,"DE > Bound","DE < Bound")
     downdir = ifelse(downmeds > 0,"DE > Bound","DE < Bound")
     dense1 = density(unlist(currtfdes))
@@ -121,22 +106,6 @@ for(i in 1:length(tests)){
             names=c("DE","Bound"),
             main=paste0(currtest," Downstream\nP-value = ",signif(wilcox.test(abs(unlist(currdowndes)),abs(unlist(currdownbounds)),na.action = na.omit)$p.value,4),"\n",downdir),
             notch=T)
-#    hist(mastermedstf,xlab="Absolute Distance to TSS",
-#         main=paste0(currtest," TF\nEmpirical P-value = ",tfempiricalp),
-#                     xlim=c(min(min(mastermedstf),tfmed),max(max(mastermedstf),tfmed)))
-#    abline(v=tfmed,lwd=3,col="indianred")
-#    hist(mastermedsdown,xlab="Absolute Distance to TSS",
-#         main=paste0(currtest," Downstream\nEmpirical P-value = ",downempiricalp),
-#                     xlim=c(min(min(mastermedsdown),downmed),max(max(mastermedsdown),downmed)))
-#    abline(v=downmed,lwd=3,col="indianred")
-#    hist(altmastertf[,1],xlab="Absolute Distance to TSS",
-#         main=paste0(currtest," TF\nAlt Empirical P-value = ",alttfempiricalp),
-#                     xlim=c(min(min(altmastertf),alttfmed),max(max(altmastertf),alttfmed)))
-#    abline(v=alttfmed,lwd=3,col="indianred")
-#    hist(altmasterdown[,1],xlab="Absolute Distance to TSS",
-#         main=paste0(currtest," Downstream\nAlt Empirical P-value = ",altdownempiricalp),
-#                     xlim=c(min(min(altmasterdown),altdownmed),max(max(altmasterdown),altdownmed)))
-#    abline(v=altdownmed,lwd=3,col="indianred")
     currtfboundsb = llply(currtfbounds, function(x){length(which(x > 0))/length(x[,1])})
     currtfdesb = llply(currtfdes, function(x){length(which(x > 0))/length(x[,1])})
     currdownboundsb = llply(currdownbounds, function(x){length(which(x > 0))/length(x[,1])})
@@ -163,17 +132,11 @@ for(i in 1:length(tests)){
     boxplot(unlist(currdowndes),unlist(currdownbounds),
             col=coloring[[colorno]],names=c("DE","Bound"),outline=F,notch=T,
             main=paste0(currtest," Downstream\nP-value = ",signif(wilcox.test(unlist(currdowndes),unlist(currdownbounds),na.action = na.omit)$p.value,4),"\n",downdir))
-#    hist(mastermedstf,main=paste0(currtest," TF\nEmpirical P-value = ",tfempiricalp),
-#         xlim=c(min(min(mastermedstf),tfmed),max(max(mastermedstf),tfmed)))
-#    abline(v=tfmed,lwd=3,col="indianred")
-#    hist(mastermedsdown,main=paste0(currtest," Downstream\nEmpirical P-value = ",downempiricalp),
-#         xlim=c(min(min(mastermedsdown),downmed),max(max(mastermedsdown),downmed)))
-#    abline(v=downmed,lwd=3,col="indianred")
-#    hist(altmastertf[,1],main=paste0(currtest," TF\nAlt Empirical P-value = ",alttfempiricalp),
-#         xlim=c(min(min(mastermedstf),tfmed),max(max(mastermedstf),tfmed)))
-#    abline(v=tfmed,lwd=3,col="indianred")
-#    hist(altmasterdown[,1],main=paste0(currtest," Downstream\nAlt Empirical P-value = ",altdownempiricalp),
-#         xlim=c(min(min(altmasterdown),downmed),max(max(altmasterdown),downmed)))
-#    abline(v=downmed,lwd=3,col="indianred")
+    if(currtest == "GrepPWM"){
+      abline(h=median(unlist(currdowndes)),col="mediumorchid3",lwd=0.25)
+      abline(h=median(unlist(currdownbounds)),col="goldenrod",lwd=0.25)
+      boxplot(unlist(currdowndes),unlist(currdownbounds),col=coloring[[colorno]],
+              outline=F,notch=T,add=T)
+    }
   }
 }

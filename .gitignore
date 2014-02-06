@@ -9,3 +9,5 @@
 kdfunc.pyc
 *.pdf
 output/
+*.tar.gz
+*.txt

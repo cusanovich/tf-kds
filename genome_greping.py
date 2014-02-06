@@ -27,11 +27,20 @@ for gene in genelist:
 #for gene in ['YY1_second']:
 	print gene
 	sys.stdout.flush()
-	currtf = genereader(grepdir+gene+'.BindingTF.txt')
+	try:
+		currtf = genereader(grepdir+gene+'.BindingTF.txt')
+	except IOError:
+		currtf = ''
 	currdownstream = genereader(grepdir+gene+'.DownstreamTFs.txt')
-	currbound = genereader(grepdir+gene+'.Bound.txt')
+	try:
+		currbound = genereader(grepdir+gene+'.Bound.txt')
+	except IOError:
+		currbound = ''
 	currboundplus = genereader(grepdir+gene+'.BoundPlus.txt')
-	currde = genereader(grepdir+gene+'.DEandBound.txt')
+	try:
+		currde = genereader(grepdir+gene+'.DEandBound.txt')
+	except:
+		currde = ''
 	currdeplus = genereader(grepdir+gene+'.DEandBoundPlus.txt')
 	first = 0
 	second = 0
@@ -70,21 +79,21 @@ for gene in genelist:
 		oneperm = open(outdir + 'GrepDistance/' + gene + '.tf.perm.distance','w')
 		two = open(outdir + 'GrepCage/' + gene + '.tf.bound.cage','w')
 		twoperm = open(outdir + 'GrepCage/' + gene + '.tf.perm.cage','w')
-	#	three = open(outdir + 'GrepChipvCenti/' + gene + '.tf.bound.chipvcenti','w')
+		three = open(outdir + 'GrepChipvCenti/' + gene + '.tf.bound.chipvcenti','w')
 		threeperm = open(outdir + 'GrepChipvCenti/' + gene + '.tf.perm.chipvcenti','w')
 		oneone = open(outdir + 'GrepDistance/' + gene + '.tf.debound.distance','w')
 		twotwo = open(outdir + 'GrepCage/' + gene + '.tf.debound.cage','w')
-	#	threethree = open(outdir + 'GrepChipvCenti/' + gene + '.tf.debound.chipvcenti','w')
+		threethree = open(outdir + 'GrepChipvCenti/' + gene + '.tf.debound.chipvcenti','w')
 	if len(currdowns) > 0:
 		ten = open(outdir + 'GrepDistance/' + gene + '.down.boundplus.distance','w')
 		tenperm = open(outdir + 'GrepDistance/' + gene + '.down.perm.distance','w')
 		eleven = open(outdir + 'GrepCage/' + gene + '.down.boundplus.cage','w')
 		elevenperm = open(outdir + 'GrepCage/' + gene + '.down.perm.cage','w')
-	#	twelve = open(outdir + 'GrepChipvCenti/' + gene + '.down.boundplus.chipvcenti','w')
+		twelve = open(outdir + 'GrepChipvCenti/' + gene + '.down.boundplus.chipvcenti','w')
 		twelveperm = open(outdir + 'GrepChipvCenti/' + gene + '.down.perm.chipvcenti','w')
 		tenten = open(outdir + 'GrepDistance/' + gene + '.down.deboundplus.distance','w')
 		eleveneleven = open(outdir + 'GrepCage/' + gene + '.down.deboundplus.cage','w')
-	#	twelvetwelve = open(outdir + 'GrepChipvCenti/' + gene + '.down.deboundplus.chipvcenti','w')
+		twelvetwelve = open(outdir + 'GrepChipvCenti/' + gene + '.down.deboundplus.chipvcenti','w')
 	for line in master:
 		strand = 1
 		liner = line.strip().split()
@@ -100,20 +109,20 @@ for gene in genelist:
 					print >> two, liner[4].split('_')[0]
 					print >> twoperm, liner[3] + "\t" + liner[4].split('_')[0]
 					tfcagegenes.append(liner[3])
-		#		chiper = 'chip'
-		#		if len(liner[9].split('_')) < 2:
-		#			chiper = 'centi'
-		#		print >> three, chiper
-		#		print >> threeperm, liner[3] + "\t" + chiper
+				chiper = 'chip'
+				if len(liner[9].split('_')) < 2:
+					chiper = 'centi'
+				print >> three, chiper
+				print >> threeperm, liner[3] + "\t" + chiper
 			if liner[3] in currde:
 				print >> oneone, strand*(int(liner[8]) - int(liner[2]))
 				if liner[3] not in tfcagegenes:
 					print >> twotwo, liner[4].split('_')[0]
 					tfcagegenes.append(liner[3])
-		#		chiper = 'chip'
-		#		if len(liner[9].split('_')) < 2:
-		#			chiper = 'centi'
-		#		print >> threethree, chiper
+				chiper = 'chip'
+				if len(liner[9].split('_')) < 2:
+					chiper = 'centi'
+				print >> threethree, chiper
 		if liner[9] in currdowns:
 			if liner[3] in currboundplus:
 				print >> ten, strand*(int(liner[8]) - int(liner[2]))
@@ -122,27 +131,27 @@ for gene in genelist:
 					print >> eleven, liner[4].split('_')[0]
 					print >> elevenperm, liner[3] + "\t" + liner[4].split('_')[0]
 					downcagegenes.append(liner[3])
-		#		chiper = 'chip'
-		#		if len(liner[9].split('_')) < 2:
-		#			chiper = 'centi'
-		#		print >> twelve, chiper
-		#		print >> twelveperm, liner[3] + "\t" + chiper
+				chiper = 'chip'
+				if len(liner[9].split('_')) < 2:
+					chiper = 'centi'
+				print >> twelve, chiper
+				print >> twelveperm, liner[3] + "\t" + chiper
 			if liner[3] in currdeplus:
 				print >> tenten, strand*(int(liner[8]) - int(liner[2]))
 				if liner[3] not in downcagegenes:
 					print >> eleveneleven, liner[4].split('_')[0]
 					downcagegenes.append(liner[3])
-		#		chiper = 'chip'
-		#		if len(liner[9].split('_')) < 2:
-		#			chiper = 'centi'
-		#		print >> twelvetwelve, chiper
+				chiper = 'chip'
+				if len(liner[9].split('_')) < 2:
+					chiper = 'centi'
+				print >> twelvetwelve, chiper
 	master.close()
 	if len(currfactor) > 0:
-	#	one.close(),oneperm.close(),two.close(),twoperm.close(),three.close(),threeperm.close(),oneone.close(),twotwo.close(),threethree.close()
-		one.close(),oneperm.close(),two.close(),twoperm.close(),oneone.close(),twotwo.close()
+		one.close(),oneperm.close(),two.close(),twoperm.close(),three.close(),threeperm.close(),oneone.close(),twotwo.close(),threethree.close()
+	#	one.close(),oneperm.close(),two.close(),twoperm.close(),oneone.close(),twotwo.close()
 	if len(currdowns) > 0:
-	#	ten.close(),tenperm.close(),eleven.close(),elevenperm.close(),twelve.close(),twelveperm.close(),tenten.close(),eleveneleven.close(),twelvetwelve.close()
-		ten.close(),tenperm.close(),eleven.close(),elevenperm.close(),tenten.close(),eleveneleven.close()
+		ten.close(),tenperm.close(),eleven.close(),elevenperm.close(),twelve.close(),twelveperm.close(),tenten.close(),eleveneleven.close(),twelvetwelve.close()
+	#	ten.close(),tenperm.close(),eleven.close(),elevenperm.close(),tenten.close(),eleveneleven.close()
 	print 'Splitting Centipede Records...'
 	sys.stdout.flush()
 	master = open(centifile,'r')

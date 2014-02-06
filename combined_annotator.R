@@ -1,6 +1,7 @@
 library('plyr')
 library('stringr')
 library('beanplot')
+library('Hmisc')
 #library('vioplot')
 source('./config.R')
 
@@ -19,8 +20,10 @@ factors = factors[match(colnames(resultsmatrix),factors[,1]),]
 all.pvals <- list.files(path = resultsbin,pattern="Pvalues.txt")
 pvals <- llply(paste(resultsbin,all.pvals,sep=""), read.table)
 namers = c()
+matchers = c()
 for(i in 1:length(all.pvals)){
 namers[i] = strsplit(all.pvals[i],"batch")[[1]][1]
+matchers[i] = strsplit(all.pvals[i],"_")[[1]][1]
 }
 names(pvals) = namers
 
@@ -51,14 +54,17 @@ master[[3]] = master[[3]][match(master[[1]][,2],master[[3]][,2]),]
 bound = list()
 bound.bound = list()
 bound.de = list()
-bound.t = c()
 down = list()
 down.bound = list()
 down.de = list()
 binaries = list()
 binary.bound = list()
 binary.de = list()
-down.t = c()
+funcers = rep(0,length(rownames(resultsmatrix)))
+winning = rep(0,length(rownames(resultsmatrix)))
+nonfuncers = rep(0,length(rownames(resultsmatrix)))
+mastercol = c()
+expressed = c()
 for(i in 4:dim(master[[2]])[2]){
   currgene = names(master[[2]])[i]
   matchgene = strsplit(currgene,"_")[[1]][1]
@@ -71,6 +77,7 @@ for(i in 4:dim(master[[2]])[2]){
   winnerfactors = factors[,3][factors[,3] %in% winners]
   winnerfactors = setdiff(winnerfactors,factors[match(matchgene,factors[,1]),3])
   winnerfactornames = as.character(factors[match(winnerfactors,factors[,3]),1])
+  expressed = union(expressed,rownames(currresultsmatrix))
   matrixcol = grep(matchgene,colnames(currresultsmatrix))
   downstreamcol = matrixcol
   for(k in 1:length(winnerfactornames)){
@@ -89,12 +96,18 @@ for(i in 4:dim(master[[2]])[2]){
                  " matches too many columns in the binding matrix!!!"))
     next
   }
+  mastercol = union(mastercol,downstreamcol)
   boundgenes = rownames(currresultsmatrix)[which(currresultsmatrix[,matrixcol] > 0)]
   downstreambound = rownames(currresultsmatrix)[which(rowSums(as.matrix(currresultsmatrix[,downstreamcol])) > 0)]
   winnerbound = intersect(winners,boundgenes)
   justbound = setdiff(boundgenes,winners)
   downwinnerbound = intersect(winners,downstreambound)
+  downwinnerrows = match(downwinnerbound,rownames(resultsmatrix))
+  funcers[downwinnerrows] = funcers[downwinnerrows] + 1
+  winning[match(winners,rownames(resultsmatrix))] = winning[match(winners,rownames(resultsmatrix))] + 1
   justdownbound = setdiff(downstreambound,winners)
+  downboundrows = match(justdownbound,rownames(resultsmatrix))
+  nonfuncers[downboundrows] = nonfuncers[downboundrows] + 1
   bound[[length(bound)+1]] = currresultsmatrix[match(winnerbound,rownames(currresultsmatrix)),matrixcol]
   bound.de[[length(bound.de)+1]] = currresultsmatrix[match(winnerbound,rownames(currresultsmatrix)),matrixcol]
   bound[[length(bound)+1]] = currresultsmatrix[match(justbound,rownames(currresultsmatrix)),matrixcol]
@@ -129,44 +142,29 @@ for(i in 4:dim(master[[2]])[2]){
                 paste0(grepbin,windowname,"/",currgene,".DownstreamTFs.txt"),
                 row.names=F,col.names=F,quote=F)
   }
-  if(length(boundgenes) < 1){
-    bound.t = c(bound.t,NA)
-    next
-  }
-  if(var(c(bound[[length(bound)-1]],bound[[length(bound)]])) != 0){
-    bound.t = c(bound.t,t.test(bound[[length(bound)-1]],bound[[length(bound)]])$statistic)
-  }else{
-    bound.t = c(bound.t,0)
-  }
   if(length(downstreamcol) == 1){
     down[[length(down)+1]] = currresultsmatrix[match(downwinnerbound,rownames(currresultsmatrix)),downstreamcol]
     binaries[[length(binaries)+1]] = currresultsbinary[match(downwinnerbound,rownames(currresultsbinary)),downstreamcol]
     down.de[[length(down.de)+1]] = currresultsmatrix[match(downwinnerbound,rownames(currresultsmatrix)),downstreamcol]
+    names(down.de)[length(down.de)] = matchgene
     binary.de[[length(binary.de)+1]] = currresultsbinary[match(downwinnerbound,rownames(currresultsbinary)),downstreamcol]
     down[[length(down)+1]] = currresultsmatrix[match(justdownbound,rownames(currresultsmatrix)),downstreamcol]
     binaries[[length(binaries)+1]] = currresultsbinary[match(justdownbound,rownames(currresultsbinary)),downstreamcol]
     down.bound[[length(down.bound)+1]] = currresultsmatrix[match(justdownbound,rownames(currresultsmatrix)),downstreamcol]
+    names(down.bound)[length(down.bound)] = matchgene
     binary.bound[[length(binary.bound)+1]] = currresultsbinary[match(justdownbound,rownames(currresultsbinary)),downstreamcol]
-    if(var(c(down[[length(down)-1]],down[[length(down)]])) != 0){
-      down.t = c(down.t,t.test(down[[length(down)-1]],down[[length(down)]])$statistic)
-    }else{
-      down.t = c(down.t,0)
-    }
     next
   }
   down[[length(down)+1]] = rowSums(currresultsmatrix[match(downwinnerbound,rownames(currresultsmatrix)),downstreamcol])
   binaries[[length(binaries)+1]] = rowSums(currresultsbinary[match(downwinnerbound,rownames(currresultsbinary)),downstreamcol])
   down.de[[length(down.de)+1]] = rowSums(currresultsmatrix[match(downwinnerbound,rownames(currresultsmatrix)),downstreamcol])
+  names(down.de)[length(down.de)] = matchgene
   binary.de[[length(binary.de)+1]] = rowSums(currresultsbinary[match(downwinnerbound,rownames(currresultsbinary)),downstreamcol])  
   down[[length(down)+1]] = rowSums(currresultsmatrix[match(justdownbound,rownames(currresultsmatrix)),downstreamcol])
   binaries[[length(binaries)+1]] = rowSums(currresultsbinary[match(justdownbound,rownames(currresultsbinary)),downstreamcol])
   down.bound[[length(down.bound)+1]] = rowSums(currresultsmatrix[match(justdownbound,rownames(currresultsmatrix)),downstreamcol])
-  binary.bound[[length(binary.bound)+1]] = rowSums(currresultsbinary[match(justdownbound,rownames(currresultsbinary)),downstreamcol])  
-  if(var(c(down[[length(down)-1]],down[[length(down)]])) != 0){
-    down.t = c(down.t,t.test(down[[length(down)-1]],down[[length(down)]])$statistic)
-  }else{
-    down.t = c(down.t,0)
-  }
+  names(down.bound)[length(down.bound)] = matchgene
+  binary.bound[[length(binary.bound)+1]] = rowSums(currresultsbinary[match(justdownbound,rownames(currresultsbinary)),downstreamcol])
 }
 
 u.bound = signif(wilcox.test(unlist(bound.de),unlist(bound.bound),na.rm=T)$p.value,4)
@@ -194,4 +192,61 @@ boxplot(unlist(binary.de),unlist(binary.bound),na.rm=T,log="y",outline=F,
         col=c("indianred","dodgerblue2"),las=1,ylab="No. of Factors Binding",
         main=paste0("Factor Variety\nP-value = ",format(u.binary)),
         names=c("DE","Bound Only"),notch=T,boxlwd=3,medlwd=4,cex.lab=1.5)
+de.counts = unlist(llply(down.de,length))
+bound.counts = unlist(llply(down.bound,length))
+countering = de.counts/(de.counts+bound.counts)
+de.meds = unlist(llply(down.de,median))
+bound.meds = unlist(llply(down.bound,median))
+de.tops = unlist(llply(down.de,quantile,0.95))
+bound.tops = unlist(llply(down.bound,quantile,0.95))
+de.bottoms = unlist(llply(down.de,quantile,0.05))
+bound.bottoms = unlist(llply(down.bound,quantile,0.05))
+frac.order = order(countering)
+expressind = match(expressed,rownames(resultsmatrix))
+binding = rowSums(resultsmatrix[expressind,mastercol])
+par(mfrow=c(1,1))
+boxplot(down.bound[frac.order],na.rm=T,log="y",outline=F,las=2,col=adjustcolor("dodgerblue2",0.5),border=adjustcolor("dodgerblue2",0.8),
+        cex.lab=0.5)
+boxplot(down.de[frac.order],na.rm=T,log="y",outline=F,las=2,col=adjustcolor("indianred",0.5),border=adjustcolor("indianred",0.8),
+        cex.lab=0.5,add=T)
+boxplot(down.bound[frac.order],na.rm=T,log="y",outline=F,las=2,col=adjustcolor("dodgerblue2",0.6),border="dodgerblue2",
+        cex.lab=1.5,varwidth=T,names=namers[frac.order])
+boxplot(down.de[frac.order],na.rm=T,log="y",outline=F,las=2,col=adjustcolor("indianred",0.6),border="indianred",
+        add=T,varwidth=T,names=namers[frac.order])
+plot(de.tops[frac.order],type="b",col="indianred",pch=20)
+points(de.meds[frac.order],type="b",col="indianred",pch=20)
+points(bound.tops[frac.order],type="b",col="dodgerblue2",pch=20)
+points(bound.meds[frac.order],type="b",col="dodgerblue2",pch=20)
+plot(de.meds[frac.order],type="b",col="indianred",pch=20)
+points(bound.meds[frac.order],type="b",col="dodgerblue2",pch=20)
+plot(de.tops,type="n")
+xs = c(1:56,56:1)
+ys = c(de.tops[frac.order],de.bottoms[frac.order])
+ysb = c(bound.tops[frac.order],bound.bottoms[frac.order])
+polygon(xs,ys,col=adjustcolor("indianred",0.5),border=NA)
+polygon(xs,ysb,col=adjustcolor("dodgerblue2",0.5),border=NA)
+nonzeroes = which(binding > 0)
+bindings = cut2(binding[nonzeroes],g=20)
+fracfunc1 = by(funcers[expressind][nonzeroes],bindings,function(x){length(which(x > 0))/length(x)})
+fracfunc2 = by(funcers[expressind][nonzeroes],bindings,function(x){length(which(x > 1))/length(x)})
+fracfunc3 = by(funcers[expressind][nonzeroes],bindings,function(x){length(which(x > 4))/length(x)})
+fracfunc4 = by(funcers[expressind][nonzeroes],bindings,function(x){length(which(x > 9))/length(x)})
+fracfunc5 = by(funcers[expressind][nonzeroes],bindings,function(x){length(which(x > 19))/length(x)})
+smoothScatter(log10(binding[nonzeroes]),funcers[expressind][nonzeroes])
+smoothScatter(log10(binding[nonzeroes]),nonfuncers[expressind][nonzeroes])
+hist(winning[expressind],breaks=50)
+hist(binding,breaks=50)
+plot(fracfunc1,type="b",col=1,ylim=c(min(fracfunc1,fracfunc2,fracfunc3,fracfunc4,fracfunc5),1))
+points(fracfunc2,type="b",col=2)
+points(fracfunc3,type="b",col=3)
+points(fracfunc4,type="b",col=4)
+points(fracfunc5,type="b",col=5)
+print(countering[frac.order[1]])
+print(countering[frac.order[length(frac.order)]])
+print(length(countering))
+print(min(funcers[expressind][nonzeroes]))
+print(length(which(funcers[expressind][nonzeroes] == 0)))
+print(levels(bindings))
+print(range(binding))
+print(median(binding))
 dev.off()
